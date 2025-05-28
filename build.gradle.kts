@@ -1,3 +1,5 @@
+import io.ktor.plugin.features.*
+
 val kotlin_version: String by project
 val logback_version: String by project
 
@@ -12,6 +14,22 @@ version = "0.0.1"
 
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
+}
+
+ktor {
+    docker {
+        jreVersion.set(JavaVersion.VERSION_21)
+        localImageName.set("luxtronic-restful-api")
+        imageTag.set(version.toString())
+        portMappings.set(
+            listOf(
+                DockerPortMapping(
+                    8080, 8080,
+                    DockerPortMappingProtocol.TCP
+                )
+            )
+        )
+    }
 }
 
 repositories {
