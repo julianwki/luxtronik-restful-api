@@ -1,18 +1,18 @@
 package com.wiersbitzki.luxtronik.plugins
 
+import com.wiersbitzki.luxtronik.services.LeistungsaufnahmeService
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.koin.ktor.ext.inject
 
 fun Application.configureRouting() {
+    val service by inject<LeistungsaufnahmeService>()
     routing {
-        get("/leistungsaufnahme") {
-            call.respond(
-                mapOf(
-                    "heizung" to 48.9,
-                    "warmwasser" to 57.4
-                )
-            )
+        route("/leistungsaufnahme") {
+            get() {
+                call.respond(service.data())
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 class ApplicationTest {
 
     @Test
-    fun testRoot() = testApplication {
+    fun smokeTest() = testApplication {
         application {
             module()
         }
