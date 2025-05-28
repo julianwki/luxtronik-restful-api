@@ -1,4 +1,4 @@
-package com.wiersbitzki
+package com.wiersbitzki.luxtronik
 
 import io.ktor.server.application.*
 
