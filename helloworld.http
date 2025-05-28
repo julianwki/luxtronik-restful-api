@@ -1,8 +1,0 @@
-GET localhost:8080/
-Accept: application/json
-
-# Status: 200 OK
-# Response Body:
-# {
-#    "message": "Hello World!"
-# }

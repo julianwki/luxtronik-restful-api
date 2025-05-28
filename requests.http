@@ -1,0 +1,18 @@
+GET localhost:8080/
+Accept: application/json
+
+# Status: 200 OK
+# Response Body:
+# {
+#    "message": "Hello World!"
+# }
+
+###
+GET localhost:8080/static/
+Accept: text/html
+
+# Status: 200 OK
+
+###
+GET localhost:8080/json/kotlinx-serialization
+Accept: */*
