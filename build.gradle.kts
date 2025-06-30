@@ -1,11 +1,11 @@
 import io.ktor.plugin.features.*
 
-val kotlinVersion: String by project
-val ktorVersion: String by project
-val logbackVersion: String by project
-val koinVersion: String by project
-val kspVersion: String by project
-val koinKspVersion: String by project
+val kotlin_version: String by project
+val ktor_version: String by project
+val logback_version: String by project
+val koin_version: String by project
+val ksp_version: String by project
+val koin_ksp_version: String by project
 
 plugins {
     kotlin("jvm") version "2.1.21"
@@ -47,18 +47,21 @@ repositories {
 
 dependencies {
     // Ktor
-    implementation("io.ktor:ktor-server-core-jvm:${ktorVersion}")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:${ktorVersion}")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:${ktorVersion}")
-    implementation("io.ktor:ktor-server-netty-jvm:${ktorVersion}")
-    implementation("ch.qos.logback:logback-classic:${logbackVersion}")
+    implementation("io.ktor:ktor-server-core:${ktor_version}")
+    implementation("io.ktor:ktor-server-content-negotiation:${ktor_version}")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:${ktor_version}")
+    implementation("io.ktor:ktor-serialization-kotlinx-xml:${ktor_version}")
+    implementation("io.ktor:ktor-server-netty:${ktor_version}")
+    implementation("io.ktor:ktor-client-websockets:${ktor_version}")
+    implementation("io.ktor:ktor-client-cio:${ktor_version}")
+    implementation("ch.qos.logback:logback-classic:${logback_version}")
     // Koin
-    implementation("io.insert-koin:koin-ktor:$koinVersion")
-    implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
-    implementation("io.insert-koin:koin-annotations:$koinKspVersion")
-    ksp("io.insert-koin:koin-ksp-compiler:$koinKspVersion")
+    implementation("io.insert-koin:koin-ktor:$koin_version")
+    implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
+    implementation("io.insert-koin:koin-annotations:$koin_ksp_version")
+    ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version")
     // testing
     implementation("io.ktor:ktor-server-config-yaml")
     testImplementation("io.ktor:ktor-server-test-host")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
