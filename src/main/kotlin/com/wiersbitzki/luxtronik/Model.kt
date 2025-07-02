@@ -10,11 +10,11 @@ data class Navigation(
     @XmlId val id: String,
     @XmlElement val data: List<NavigationItem>
 ) {
-    fun findNavigationItemWithName(name: String): NavigationItem {
+    fun readNavigationId(name: String): String {
         for (item in data) {
             val itemWithName = item.findNavigationItemWithName(name)
             if (itemWithName != null) {
-                return itemWithName
+                return itemWithName.id
             }
         }
         throw IllegalArgumentException("Unable to find item with name $name")
@@ -30,8 +30,7 @@ data class NavigationItem(
     @XmlElement val value: String?,
     @XmlElement val data: List<NavigationItem>
 ) {
-
-    fun findNavigationItemWithName(name: String): NavigationItem? {
+    internal fun findNavigationItemWithName(name: String): NavigationItem? {
         if (name == this.name) {
             return this
         }
@@ -50,7 +49,12 @@ data class Content(
     @XmlElement val name: String,
     @XmlElement val data: List<ContentItem>
 ) {
-    fun findDataItemWithName(name: String) =
+    fun Content.readValue(name: String, suffix: String = "") =
+        findDataItemWithName(name)
+            .value
+            .let { if (suffix != "") it.substringBefore(suffix) else it }
+
+    private fun findDataItemWithName(name: String) =
         data.firstOrNull { it.name == name }
             ?: throw IllegalArgumentException("Unable to find item with name $name")
 }

@@ -2,14 +2,17 @@ package com.wiersbitzki.luxtronik.services
 
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.Navigation
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.websocket.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.*
-import io.ktor.util.logging.*
-import io.ktor.websocket.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.receiveDeserialized
+import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
+import io.ktor.util.logging.KtorSimpleLogger
+import io.ktor.websocket.send
 import kotlinx.coroutines.runBlocking
 import nl.adaptivity.xmlutil.serialization.XML
 import org.koin.core.annotation.Singleton
@@ -43,24 +46,21 @@ class PowerConsumptionService {
                 }
             ) {
                 send("LOGIN;$DEFAULT_PIN")
-                val navigation = receiveDeserialized<Navigation>()
-                    .also { logger.info("Fetched navigation: {}", it) }
+                receiveDeserialized<Navigation>()
+                    .let {
+                        logger.debug("Fetched navigation: {}", it)
 
-                with(navigation) {
-                    send("GET;${readNavigationId("Anlagenstatus")}")
-                    result.put(
-                        "aktuell",
+                        send("GET;${it.readNavigationId("Anlagenstatus")}")
                         receiveDeserialized<Content>()
-                            .also { logger.info("Fetched content: {}", it) }
+                            .also { logger.debug("Fetched content: {}", it) }
                             .extractLeistungsaufnahmeAktuell()
-                    )
+                            .let { result.put("aktuell", it) }
 
-                    send("GET;${readNavigationId("Leistungsaufnahme")}")
-                    result.put(
-                        "gesamt", receiveDeserialized<Content>()
-                            .also { logger.info("Fetched content: {}", it) }
+                        send("GET;${it.readNavigationId("Leistungsaufnahme")}")
+                        receiveDeserialized<Content>()
+                            .also { logger.debug("Fetched content: {}", it) }
                             .extractLeistungsaufnahmeGesamt()
-                    )
+                            .let { result.put("gesamt", it) }
                 }
             }
             return@runBlocking result
@@ -68,10 +68,11 @@ class PowerConsumptionService {
 
     private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
         val betriebszustand = readValue("Betriebszustand")
-        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).toDouble()
+        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).toDouble() * 1000
         return mapOf(
             "heizung" to if (betriebszustand == "Heiz") leistungsaufnahme else 0.0,
             "warmwasser" to if (betriebszustand == "WW") leistungsaufnahme else 0.0,
+            "umwälzung" to if (betriebszustand != "Heiz" && betriebszustand != "WW") leistungsaufnahme else 0.0,
         ).also { logger.info("Leistungsaufnahme (Aktuell): {}", it) }
     }
 
@@ -79,13 +80,6 @@ class PowerConsumptionService {
         mapOf(
             "heizung" to readValue("Heizung", KWH_SUFFIX).toDouble(),
             "warmwasser" to readValue("Warmwasser", KWH_SUFFIX).toDouble(),
+            "gesamt" to readValue("Gesamt", KW_SUFFIX).toDouble()
         ).also { logger.info("Leistungsaufnahme (Gesamt): {}", it) }
-
-    private fun Navigation.readNavigationId(name: String) =
-        findNavigationItemWithName(name).id
-
-    private fun Content.readValue(name: String, suffix: String = "") =
-        findDataItemWithName(name)
-            .value
-            .let { if (suffix != "") it.substringBefore(suffix) else it }
 }
