@@ -16,6 +16,7 @@ import io.ktor.websocket.send
 import kotlinx.coroutines.runBlocking
 import nl.adaptivity.xmlutil.serialization.XML
 import org.koin.core.annotation.Singleton
+import kotlin.random.Random
 
 private const val HOST = "192.168.178.164"
 private const val DEFAULT_PIN = 999999
@@ -27,7 +28,8 @@ private const val KW_SUFFIX = " kW"
 class PowerConsumptionService {
 
     internal val logger = KtorSimpleLogger(PowerConsumptionService::class.java.simpleName)
-    internal val client = HttpClient(CIO) {
+    internal val client
+        get() = HttpClient(CIO) {
         install(WebSockets) {
             contentConverter = KotlinxWebsocketSerializationConverter(XML)
         }
@@ -47,34 +49,37 @@ class PowerConsumptionService {
             ) {
                 send("LOGIN;$DEFAULT_PIN")
                 receiveDeserialized<Navigation>()
-                    .let {
-                        logger.debug("Fetched navigation: {}", it)
-
-                        send("GET;${it.readNavigationId("Anlagenstatus")}")
+                    .also { logger.debug("Fetched navigation: {}", it) }
+                    .let { navigation ->
+                        send("GET;${navigation.readNavigationId("Anlagenstatus")}")
                         receiveDeserialized<Content>()
                             .also { logger.debug("Fetched content: {}", it) }
                             .extractLeistungsaufnahmeAktuell()
                             .let { result.put("aktuell", it) }
 
-                        send("GET;${it.readNavigationId("Leistungsaufnahme")}")
+                        send("GET;${navigation.readNavigationId("Leistungsaufnahme")}")
                         receiveDeserialized<Content>()
                             .also { logger.debug("Fetched content: {}", it) }
                             .extractLeistungsaufnahmeGesamt()
                             .let { result.put("gesamt", it) }
                 }
             }
+            client.close()
             return@runBlocking result
         }
 
     private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
         val betriebszustand = readValue("Betriebszustand")
-        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).toDouble() * 1000
+        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).toDouble().fuzzyWatt()
         return mapOf(
             "heizung" to if (betriebszustand == "Heiz") leistungsaufnahme else 0.0,
             "warmwasser" to if (betriebszustand == "WW") leistungsaufnahme else 0.0,
             "umwälzung" to if (betriebszustand != "Heiz" && betriebszustand != "WW") leistungsaufnahme else 0.0,
         ).also { logger.info("Leistungsaufnahme (Aktuell): {}", it) }
     }
+
+    private fun Double.fuzzyWatt() =
+        if (this > 0) this * 1000 + Random.nextInt(-5, 5) else 0.0
 
     private fun Content.extractLeistungsaufnahmeGesamt() =
         mapOf(
