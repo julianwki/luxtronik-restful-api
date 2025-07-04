@@ -70,16 +70,22 @@ class PowerConsumptionService {
 
     private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
         val betriebszustand = readValue("Betriebszustand")
-        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).toDouble().fuzzyWatt()
+        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).toDouble().fuzzyWatt
         return mapOf(
-            "heizung" to if (betriebszustand == "Heiz") leistungsaufnahme else 0.0,
-            "warmwasser" to if (betriebszustand == "WW") leistungsaufnahme else 0.0,
-            "umwälzung" to if (betriebszustand != "Heiz" && betriebszustand != "WW") leistungsaufnahme else 0.0,
+            "heizung" to if (betriebszustand.heizung) leistungsaufnahme else 0.0,
+            "warmwasser" to if (betriebszustand.warmwasser) leistungsaufnahme else 0.0,
+            "umwälzung" to if (betriebszustand.umwaelzung) leistungsaufnahme else 0.0
         ).also { logger.info("Leistungsaufnahme (Aktuell): {}", it) }
     }
 
-    private fun Double.fuzzyWatt() =
-        if (this > 0) this * 1000 + Random.nextInt(-5, 5) else 0.0
+    private val Double.fuzzyWatt
+        get() = if (this > 0) this * 1000 + Random.nextInt(-5, 5) else 0.0
+    private val String.heizung
+        get() = this == "Heizen"
+    private val String.warmwasser
+        get() = this == "WW"
+    private val String.umwaelzung
+        get() = this.heizung.not() && this.warmwasser.not()
 
     private fun Content.extractLeistungsaufnahmeGesamt() =
         mapOf(
