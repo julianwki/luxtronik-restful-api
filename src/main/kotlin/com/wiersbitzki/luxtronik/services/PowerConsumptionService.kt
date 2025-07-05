@@ -70,27 +70,30 @@ class PowerConsumptionService {
 
     private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
         val betriebszustand = readValue("Betriebszustand")
-        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).toDouble().fuzzyWatt
+        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).toDouble().asFuzzyWatt()
         return mapOf(
-            "heizung" to if (betriebszustand.heizung) leistungsaufnahme else 0.0,
-            "warmwasser" to if (betriebszustand.warmwasser) leistungsaufnahme else 0.0,
-            "umwälzung" to if (betriebszustand.umwaelzung) leistungsaufnahme else 0.0
+            "heizung" to when {
+                betriebszustand.isHeizung() -> leistungsaufnahme
+                betriebszustand.isBlank() -> leistungsaufnahme / 2
+                else -> 0.0
+            },
+            "warmwasser" to when {
+                betriebszustand.isWarmwasser() -> leistungsaufnahme
+                betriebszustand.isBlank() -> leistungsaufnahme / 2
+                else -> 0.0
+            }
         ).also { logger.info("Leistungsaufnahme (Aktuell): {}", it) }
     }
 
-    private val Double.fuzzyWatt
-        get() = if (this > 0) this * 1000 + Random.nextInt(-5, 5) else 0.0
-    private val String.heizung
-        get() = this == "Heizen"
-    private val String.warmwasser
-        get() = this == "WW"
-    private val String.umwaelzung
-        get() = this.heizung.not() && this.warmwasser.not()
+    private fun Double.asFuzzyWatt() =
+        if (this > 0) this * 1000 + Random.nextInt(-5, 5) else 0.0
+
+    private fun String.isHeizung() = this == "Heizen"
+    private fun String.isWarmwasser() = this == "WW"
 
     private fun Content.extractLeistungsaufnahmeGesamt() =
         mapOf(
             "heizung" to readValue("Heizung", KWH_SUFFIX).toDouble(),
             "warmwasser" to readValue("Warmwasser", KWH_SUFFIX).toDouble(),
-            "gesamt" to readValue("Gesamt", KW_SUFFIX).toDouble()
         ).also { logger.info("Leistungsaufnahme (Gesamt): {}", it) }
 }
