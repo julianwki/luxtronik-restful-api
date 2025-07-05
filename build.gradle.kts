@@ -5,15 +5,14 @@ val kotlin_version: String by project
 val ktor_version: String by project
 val logback_version: String by project
 val koin_version: String by project
-val ksp_version: String by project
 val koin_ksp_version: String by project
 val ktor_simple_cache: String by project
 
 plugins {
     kotlin("jvm") version "2.1.21"
-    id("io.ktor.plugin") version "3.1.3"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.10"
-    id("com.google.devtools.ksp") version "2.1.21-2.0.1"
+    id("io.ktor.plugin") version "3.2.1"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.21"
+    id("com.google.devtools.ksp") version "2.1.21-2.0.2"
 }
 
 sourceSets.main {
@@ -21,7 +20,7 @@ sourceSets.main {
 }
 
 group = "com.wiersbitzki.luxtronik"
-version = "0.0.7"
+version = "0.0.8"
 
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
