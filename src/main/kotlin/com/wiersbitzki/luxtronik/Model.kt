@@ -31,7 +31,7 @@ data class NavigationItem(
     @XmlElement val data: List<NavigationItem>
 ) {
     internal fun findNavigationItemWithName(name: String): NavigationItem? {
-        if (name == this.name) {
+        if (this.name.trim() == name) {
             return this
         }
         for (item in data) {
@@ -50,13 +50,10 @@ data class Content(
     @XmlElement val data: List<ContentItem>
 ) {
     fun Content.readValue(name: String, suffix: String = "") =
-        findDataItemWithName(name)
+        data.first { it.name.trim() == name }
             .value
-            .let { if (suffix != "") it.substringBefore(suffix) else it }
-
-    private fun findDataItemWithName(name: String) =
-        data.firstOrNull { it.name == name }
-            ?: throw IllegalArgumentException("Unable to find item with name $name")
+            .let { if (suffix.isNotEmpty()) it.substringBefore(suffix) else it }
+            .trim()
 }
 
 @Serializable
