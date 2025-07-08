@@ -12,11 +12,14 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.util.logging.KtorSimpleLogger
+import io.ktor.websocket.close
 import io.ktor.websocket.send
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import nl.adaptivity.xmlutil.serialization.XML
 import org.koin.core.annotation.Singleton
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 private const val HOST = "192.168.178.164"
 private const val DEFAULT_PIN = 999999
@@ -30,15 +33,22 @@ class PowerConsumptionService {
     internal val logger = KtorSimpleLogger(PowerConsumptionService::class.java.simpleName)
     internal val client
         get() = HttpClient(CIO) {
-        install(WebSockets) {
-            contentConverter = KotlinxWebsocketSerializationConverter(XML)
+            install(WebSockets) {
+                contentConverter = KotlinxWebsocketSerializationConverter(XML)
+            }
         }
-    }
 
-    fun data() =
+    fun data(): Map<String, Map<String, Double>> =
         runBlocking {
-            val result = mutableMapOf<String, Map<String, Double>>()
-            client.webSocket(
+            withTimeout(1.seconds) {
+                fetchData()
+            }
+        }
+
+    private suspend fun fetchData(): Map<String, Map<String, Double>> {
+        val data = mutableMapOf<String, Map<String, Double>>()
+        client.let {
+            it.webSocket(
                 method = HttpMethod.Get,
                 host = HOST,
                 port = 8214,
@@ -49,24 +59,27 @@ class PowerConsumptionService {
             ) {
                 send("LOGIN;$DEFAULT_PIN")
                 receiveDeserialized<Navigation>()
-                    .also { logger.debug("Fetched navigation: {}", it) }
                     .let { navigation ->
-                        send("GET;${navigation.readNavigationId("Anlagenstatus")}")
+                        send("GET;${navigation.anlagenstatusId}")
                         receiveDeserialized<Content>()
-                            .also { logger.debug("Fetched content: {}", it) }
-                            .extractLeistungsaufnahmeAktuell()
-                            .let { result.put("aktuell", it) }
-
-                        send("GET;${navigation.readNavigationId("Leistungsaufnahme")}")
+                            .let { content -> data.put("aktuell", content.extractLeistungsaufnahmeAktuell()) }
+                        send("GET;${navigation.leistungsaufnahmeId}")
                         receiveDeserialized<Content>()
-                            .also { logger.debug("Fetched content: {}", it) }
-                            .extractLeistungsaufnahmeGesamt()
-                            .let { result.put("gesamt", it) }
-                }
+                            .let { content -> data.put("gesamt", content.extractLeistungsaufnahmeGesamt()) }
+                    }
+                close()
             }
-            client.close()
-            return@runBlocking result
+            it.close()
         }
+        return data
+    }
+
+    private val Navigation.anlagenstatusId
+        get() = readNavigationId("Anlagenstatus")
+            .also { logger.debug("Navigation: {}", this) }
+    private val Navigation.leistungsaufnahmeId
+        get() = readNavigationId("Leistungsaufnahme")
+            .also { logger.debug("Navigation: {}", this) }
 
     private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
         val betriebszustand = readValue("Betriebszustand")
@@ -82,7 +95,11 @@ class PowerConsumptionService {
                 betriebszustand.isBlank() -> leistungsaufnahme / 2
                 else -> 0.0
             }
-        ).also { logger.info("Leistungsaufnahme (Aktuell): {}", it) }
+        ).also {
+            logger.debug("Content: {}", this)
+        }.also {
+            logger.info("Leistungsaufnahme (Aktuell): {}", it)
+        }
     }
 
     private fun Double.asFuzzyWatt() =
@@ -95,5 +112,9 @@ class PowerConsumptionService {
         mapOf(
             "heizung" to readValue("Heizung", KWH_SUFFIX).toDouble(),
             "warmwasser" to readValue("Warmwasser", KWH_SUFFIX).toDouble(),
-        ).also { logger.info("Leistungsaufnahme (Gesamt): {}", it) }
+        ).also {
+            logger.debug("Content: {}", this)
+        }.also {
+            logger.info("Leistungsaufnahme (Gesamt): {}", it)
+        }
 }
