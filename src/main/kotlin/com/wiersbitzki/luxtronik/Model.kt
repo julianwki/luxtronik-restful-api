@@ -10,14 +10,19 @@ data class Navigation(
     @XmlId val id: String,
     @XmlElement val data: List<NavigationItem>
 ) {
-    fun readNavigationId(name: String): String {
+    fun readNavigationId(vararg path: String): String {
         for (item in data) {
-            val itemWithName = item.findNavigationItemWithName(name)
-            if (itemWithName != null) {
-                return itemWithName.id
+            val first = path[0]
+            val rest = path.drop(1)
+            if (item.name.trim() == first) {
+                return if (rest.isEmpty()) {
+                    item.id
+                } else {
+                    item.findNavigationItemWithName(rest)?.id ?: break
+                }
             }
         }
-        throw IllegalArgumentException("Unable to find item with name $name")
+        throw IllegalArgumentException("Unable to find item with path ${path.joinToString("/")}")
     }
 }
 
@@ -26,18 +31,20 @@ data class Navigation(
 data class NavigationItem(
     @XmlId val id: String,
     @XmlElement val name: String,
-    @XmlElement val readOnly: Boolean?,
-    @XmlElement val value: String?,
-    @XmlElement val data: List<NavigationItem>
+    @XmlElement val readOnly: Boolean? = null,
+    @XmlElement val value: String? = null,
+    @XmlElement val data: List<NavigationItem> = emptyList()
 ) {
-    internal fun findNavigationItemWithName(name: String): NavigationItem? {
-        if (this.name.trim() == name) {
-            return this
-        }
+    internal fun findNavigationItemWithName(path: List<String>): NavigationItem? {
         for (item in data) {
-            val itemWithName = item.findNavigationItemWithName(name)
-            if (itemWithName != null) {
-                return itemWithName
+            val first = path[0]
+            val rest = path.drop(1)
+            if (item.name.trim() == first) {
+                return if (rest.isEmpty()) {
+                    item
+                } else {
+                    item.findNavigationItemWithName(rest)
+                }
             }
         }
         return null
@@ -49,7 +56,7 @@ data class Content(
     @XmlElement val name: String,
     @XmlElement val data: List<ContentItem>
 ) {
-    fun Content.readValue(name: String, suffix: String = "") =
+    fun readValue(name: String, suffix: String = "") =
         data.first { it.name.trim() == name }
             .value
             .let { if (suffix.isNotEmpty()) it.substringBefore(suffix) else it }

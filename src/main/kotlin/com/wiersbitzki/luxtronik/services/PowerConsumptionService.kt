@@ -2,18 +2,14 @@ package com.wiersbitzki.luxtronik.services
 
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.Navigation
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.client.plugins.websocket.receiveDeserialized
-import io.ktor.client.plugins.websocket.webSocket
-import io.ktor.client.request.header
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
-import io.ktor.util.logging.KtorSimpleLogger
-import io.ktor.websocket.close
-import io.ktor.websocket.send
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.websocket.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.*
+import io.ktor.util.logging.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import nl.adaptivity.xmlutil.serialization.XML
@@ -24,8 +20,8 @@ import kotlin.time.Duration.Companion.seconds
 private const val HOST = "192.168.178.164"
 private const val DEFAULT_PIN = 999999
 
-private const val KWH_SUFFIX = " kWh"
-private const val KW_SUFFIX = " kW"
+private const val KWH_SUFFIX = "kWh"
+private const val KW_SUFFIX = "kW"
 
 @Singleton
 class PowerConsumptionService {
@@ -75,10 +71,10 @@ class PowerConsumptionService {
     }
 
     private val Navigation.anlagenstatusId
-        get() = readNavigationId("Anlagenstatus")
+        get() = readNavigationId("Informationen", "Anlagenstatus")
             .also { logger.debug("Navigation: {}", this) }
     private val Navigation.leistungsaufnahmeId
-        get() = readNavigationId("Leistungsaufnahme")
+        get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
             .also { logger.debug("Navigation: {}", this) }
 
     private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
