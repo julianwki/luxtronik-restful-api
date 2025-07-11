@@ -1,12 +1,12 @@
-import io.ktor.plugin.features.DockerPortMapping
-import io.ktor.plugin.features.DockerPortMappingProtocol
+import io.ktor.plugin.features.*
 
 val kotlin_version: String by project
 val ktor_version: String by project
 val logback_version: String by project
 val koin_version: String by project
 val koin_ksp_version: String by project
-val ktor_simple_cache: String by project
+val ktor_simple_cache_version: String by project
+val kotest_version: String by project
 
 plugins {
     kotlin("jvm") version "2.1.21"
@@ -41,6 +41,10 @@ ktor {
     }
 }
 
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+}
+
 repositories {
     mavenCentral()
 }
@@ -56,8 +60,8 @@ dependencies {
     implementation("io.ktor:ktor-client-websockets:${ktor_version}")
     implementation("io.ktor:ktor-client-cio:${ktor_version}")
     implementation("ch.qos.logback:logback-classic:${logback_version}")
-    implementation("com.ucasoft.ktor:ktor-simple-cache:${ktor_simple_cache}")
-    implementation("com.ucasoft.ktor:ktor-simple-memory-cache:${ktor_simple_cache}")
+    implementation("com.ucasoft.ktor:ktor-simple-cache:${ktor_simple_cache_version}")
+    implementation("com.ucasoft.ktor:ktor-simple-memory-cache:${ktor_simple_cache_version}")
     // Koin
     implementation("io.insert-koin:koin-ktor:$koin_version")
     implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
@@ -67,4 +71,5 @@ dependencies {
     implementation("io.ktor:ktor-server-config-yaml")
     testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    testImplementation("io.kotest:kotest-runner-junit5:$kotest_version")
 }

@@ -1,13 +1,11 @@
 package com.wiersbitzki.luxtronik
 
-import org.junit.jupiter.api.assertThrows
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
 
-class ModelTest {
-
-    @Test
-    fun testNavigationReadNavigationId() {
+class ModelTest : ShouldSpec({
+    context("navigation") {
         val navigation = Navigation(
             id = "navId",
             data = listOf(
@@ -30,27 +28,22 @@ class ModelTest {
             )
         )
 
-        assertEquals("navItemId1", navigation.readNavigationId("navItem1"))
-        assertEquals("navItemId2", navigation.readNavigationId("navItem2"))
-        assertEquals("navItemId2.1", navigation.readNavigationId("navItem2", "navItem2.1"))
-        assertEquals("navItemId2.2", navigation.readNavigationId("navItem2", "navItem2.2"))
+        should("read navigation id") {
+            navigation.readNavigationId("navItem1").shouldBe("navItemId1")
+            navigation.readNavigationId("navItem2").shouldBe("navItemId2")
+            navigation.readNavigationId("navItem2", "navItem2.1").shouldBe("navItemId2.1")
+            navigation.readNavigationId("navItem2", "navItem2.2").shouldBe("navItemId2.2")
+        }
 
-        assertEquals(
-            "Unable to find item with path foo",
-            assertThrows<IllegalArgumentException> {
-                navigation.readNavigationId("foo")
-            }.message
-        )
-        assertEquals(
-            "Unable to find item with path navItem1/foo",
-            assertThrows<IllegalArgumentException> {
-                navigation.readNavigationId("navItem1", "foo")
-            }.message
-        )
+        should("throw exception if not finding matching item") {
+            shouldThrow<IllegalArgumentException> { navigation.readNavigationId("foo") }
+                .message.shouldBe("Unable to find item with path foo")
+            shouldThrow<IllegalArgumentException> { navigation.readNavigationId("navItem1", "foo") }
+                .message.shouldBe("Unable to find item with path navItem1/foo")
+        }
     }
 
-    @Test
-    fun testContentReadValue() {
+    context("content") {
         val content = Content(
             name = "some content",
             data = listOf(
@@ -72,10 +65,14 @@ class ModelTest {
             )
         )
 
-        assertEquals("123", content.readValue("contentItem1"))
-        assertEquals("456 kW", content.readValue("contentItem2"))
-        assertEquals("456", content.readValue("contentItem2", "kW"))
-        assertEquals("789 kWh", content.readValue("contentItem3"))
-        assertEquals("789", content.readValue("contentItem3", "kWh"))
+        should("read value") {
+            content.readValue("contentItem1").shouldBe("123")
+            content.readValue("contentItem2").shouldBe("456 kW")
+            content.readValue("contentItem3").shouldBe("789 kWh")
+        }
+        should("read value without suffix") {
+            content.readValue("contentItem2", "kW").shouldBe("456")
+            content.readValue("contentItem3", "kWh").shouldBe("789")
+        }
     }
-}
+})

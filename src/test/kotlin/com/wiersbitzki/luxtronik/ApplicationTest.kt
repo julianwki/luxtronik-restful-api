@@ -1,21 +1,25 @@
 package com.wiersbitzki.luxtronik
 
-import io.ktor.client.request.get
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.testApplication
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.shouldBe
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.server.testing.*
 
-class ApplicationTest {
+class ApplicationTest : ShouldSpec({
+    context("application") {
 
-    @Test
-    fun smokeTest() = testApplication {
-        application {
-            module()
-        }
-        client.get("/leistungsaufnahme").apply {
-            assertEquals(HttpStatusCode.Companion.OK, status)
+        should("smoke test") {
+            testApplication {
+                application {
+                    module()
+                }
+                client.get("/leistungsaufnahme").apply {
+                    status shouldBe HttpStatusCode.OK
+                }
+            }
         }
     }
 
-}
+
+})
