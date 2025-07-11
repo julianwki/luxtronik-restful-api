@@ -2,70 +2,34 @@ package com.wiersbitzki.luxtronik.services
 
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.Navigation
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.websocket.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.*
 import io.ktor.util.logging.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
-import nl.adaptivity.xmlutil.serialization.XML
 import org.koin.core.annotation.Singleton
 import kotlin.random.Random
-import kotlin.time.Duration.Companion.seconds
-
-private const val HOST = "192.168.178.164"
-private const val DEFAULT_PIN = 999999
 
 private const val KWH_SUFFIX = "kWh"
 private const val KW_SUFFIX = "kW"
 
 @Singleton
-class PowerConsumptionService {
+class PowerConsumptionService(
+    private val websocketService: WebsocketService
+) {
 
     internal val logger = KtorSimpleLogger(PowerConsumptionService::class.java.simpleName)
-    internal val client
-        get() = HttpClient(CIO) {
-            install(WebSockets) {
-                contentConverter = KotlinxWebsocketSerializationConverter(XML)
-            }
-        }
 
-    fun data(): Map<String, Map<String, Double>> =
-        runBlocking {
-            withTimeout(1.seconds) {
-                fetchData()
-            }
-        }
-
-    private suspend fun fetchData(): Map<String, Map<String, Double>> {
+    fun data(): Map<String, Map<String, Double>> {
         val data = mutableMapOf<String, Map<String, Double>>()
-        client.let {
-            it.webSocket(
-                method = HttpMethod.Get,
-                host = HOST,
-                port = 8214,
-                path = "/",
-                request = {
-                    header(HttpHeaders.SecWebSocketProtocol, "Lux_WS")
+        websocketService.execute {
+            receiveDeserialized<Navigation>()
+                .let { navigation ->
+                    send("GET;${navigation.anlagenstatusId}")
+                    receiveDeserialized<Content>()
+                        .let { content -> data.put("aktuell", content.extractLeistungsaufnahmeAktuell()) }
+                    send("GET;${navigation.leistungsaufnahmeId}")
+                    receiveDeserialized<Content>()
+                        .let { content -> data.put("gesamt", content.extractLeistungsaufnahmeGesamt()) }
                 }
-            ) {
-                send("LOGIN;$DEFAULT_PIN")
-                receiveDeserialized<Navigation>()
-                    .let { navigation ->
-                        send("GET;${navigation.anlagenstatusId}")
-                        receiveDeserialized<Content>()
-                            .let { content -> data.put("aktuell", content.extractLeistungsaufnahmeAktuell()) }
-                        send("GET;${navigation.leistungsaufnahmeId}")
-                        receiveDeserialized<Content>()
-                            .let { content -> data.put("gesamt", content.extractLeistungsaufnahmeGesamt()) }
-                    }
-                close()
-            }
-            it.close()
         }
         return data
     }
