@@ -6,6 +6,8 @@ import com.wiersbitzki.luxtronik.plugins.configureDependencyInjection
 import com.wiersbitzki.luxtronik.plugins.configureRouting
 import com.wiersbitzki.luxtronik.plugins.configureSerialization
 import io.ktor.server.application.Application
+import io.ktor.util.logging.KtorSimpleLogger
+import io.ktor.util.logging.Logger
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
@@ -17,4 +19,9 @@ fun Application.module() {
     configureCallLogging()
     configureCaching()
     configureRouting()
+}
+
+interface Logging {
+    val logger: Logger
+        get() = KtorSimpleLogger(this::class.simpleName!!)
 }

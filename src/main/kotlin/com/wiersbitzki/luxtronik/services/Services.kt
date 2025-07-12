@@ -1,5 +1,7 @@
 package com.wiersbitzki.luxtronik.services
 
-fun interface DataService {
+import com.wiersbitzki.luxtronik.Logging
+
+fun interface DataService : Logging {
     fun data(): Map<String, Any>
 }

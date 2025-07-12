@@ -2,9 +2,8 @@ package com.wiersbitzki.luxtronik.services
 
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.Navigation
-import io.ktor.client.plugins.websocket.*
-import io.ktor.util.logging.*
-import io.ktor.websocket.*
+import io.ktor.client.plugins.websocket.receiveDeserialized
+import io.ktor.websocket.send
 import org.koin.core.annotation.Singleton
 import kotlin.random.Random
 
@@ -15,8 +14,6 @@ private const val KW_SUFFIX = "kW"
 class PowerConsumptionService(
     private val websocketService: WebsocketService
 ) : DataService {
-
-    internal val logger = KtorSimpleLogger(PowerConsumptionService::class.java.simpleName)
 
     override fun data(): Map<String, Any> {
         val data = mutableMapOf<String, Any>()
