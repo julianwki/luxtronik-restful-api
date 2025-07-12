@@ -5,3 +5,7 @@ Accept: application/json
 ###
 GET 192.168.178.202:8080/leistungsaufnahme
 Accept: application/json
+
+###
+GET localhost:8080/jahreszahl
+Accept: application/json

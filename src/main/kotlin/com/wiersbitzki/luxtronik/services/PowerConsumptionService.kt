@@ -14,12 +14,12 @@ private const val KW_SUFFIX = "kW"
 @Singleton
 class PowerConsumptionService(
     private val websocketService: WebsocketService
-) {
+) : DataService {
 
     internal val logger = KtorSimpleLogger(PowerConsumptionService::class.java.simpleName)
 
-    fun data(): Map<String, Map<String, Double>> {
-        val data = mutableMapOf<String, Map<String, Double>>()
+    override fun data(): Map<String, Any> {
+        val data = mutableMapOf<String, Any>()
         websocketService.execute {
             receiveDeserialized<Navigation>()
                 .let { navigation ->
@@ -31,7 +31,7 @@ class PowerConsumptionService(
                         .let { content -> data.put("gesamt", content.extractLeistungsaufnahmeGesamt()) }
                 }
         }
-        return data
+        return data.also { logger.info("$it") }
     }
 
     private val Navigation.anlagenstatusId
@@ -43,7 +43,10 @@ class PowerConsumptionService(
 
     private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
         val betriebszustand = readValue("Betriebszustand")
-        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).toDouble().asFuzzyWatt()
+            .also { logger.info("Betriebszustand: {}", it.ifEmpty { "\"\"" }) }
+        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX)
+            .also { logger.info("Leistungsaufnahme: {}", it) }
+            .asFuzzyWatt()
         return mapOf(
             "heizung" to when {
                 betriebszustand.isHeizung() -> leistungsaufnahme
@@ -54,27 +57,35 @@ class PowerConsumptionService(
                 betriebszustand.isWarmwasser() -> leistungsaufnahme
                 betriebszustand.isBlank() -> leistungsaufnahme / 2
                 else -> 0.0
+            },
+            "gesamt" to when {
+                betriebszustand.isWarmwasser() -> leistungsaufnahme
+                betriebszustand.isHeizung() -> leistungsaufnahme
+                else -> 0.0
             }
         ).also {
             logger.debug("Content: {}", this)
-        }.also {
-            logger.info("Leistungsaufnahme (Aktuell): {}", it)
         }
     }
 
-    private fun Double.asFuzzyWatt() =
-        if (this > 0) this * 1000 + Random.nextInt(-5, 5) else 0.0
+    private fun String.asFuzzyWatt() = toDouble()
+        .let { if (it > 0) it * 1000 + Random.nextInt(-5, 5) else 0.0 }
 
     private fun String.isHeizung() = this == "Heizen"
     private fun String.isWarmwasser() = this == "WW"
 
     private fun Content.extractLeistungsaufnahmeGesamt() =
         mapOf(
-            "heizung" to readValue("Heizung", KWH_SUFFIX).toDouble(),
-            "warmwasser" to readValue("Warmwasser", KWH_SUFFIX).toDouble(),
+            "heizung" to readValue("Heizung", KWH_SUFFIX)
+                .also { logger.info("Heizung: {}", it) }
+                .toDouble(),
+            "warmwasser" to readValue("Warmwasser", KWH_SUFFIX)
+                .also { logger.info("Warmwasser: {}", it) }
+                .toDouble(),
+            "gesamt" to readValue("Gesamt", KWH_SUFFIX)
+                .also { logger.info("Gesamt: {}", it) }
+                .toDouble()
         ).also {
             logger.debug("Content: {}", this)
-        }.also {
-            logger.info("Leistungsaufnahme (Gesamt): {}", it)
         }
 }
