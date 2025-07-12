@@ -39,21 +39,26 @@ class CoefficientOfPerformanceService(
             .also { logger.debug("Navigation: {}", this) }
 
     private val Content.heizung
-        get() = readValue("Heizung", KWH_SUFFIX)
-            .also { logger.info("Heizung: {}", it) }
-            .toDouble()
-            .also { logger.debug("Content: {}", this) }
+        get() = "Heizung".let { name ->
+            readValue(name, KWH_SUFFIX)
+                .also { logger.info("{}: {}", name, it) }
+                .toDouble()
+                .also { logger.debug("Content: {}", this) }
+        }
     private val Content.warmwasser
-        get() = readValue("Warmwasser", KWH_SUFFIX)
-            .also { logger.info("Warmwasser: {}", it) }
-            .toDouble()
-            .also { logger.debug("Content: {}", this) }
+        get() = "Warmwasser".let { name ->
+            readValue("Warmwasser", KWH_SUFFIX)
+                .also { logger.info("{}: {}", name, it) }
+                .toDouble()
+                .also { logger.debug("Content: {}", this) }
+        }
     private val Content.gesamt
-        get() = readValue("Gesamt", KWH_SUFFIX)
-            .also { logger.info("Gesamt: {}", it) }
-            .toDouble()
-            .also { logger.debug("Content: {}", this) }
-
+        get() = "Gesamt".let { name ->
+            readValue("Gesamt", KWH_SUFFIX)
+                .also { logger.info("{}: {}", name, it) }
+                .toDouble()
+                .also { logger.debug("Content: {}", this) }
+        }
     private fun Double.round() = toBigDecimal()
         .setScale(2, RoundingMode.HALF_UP)
         .toDouble()

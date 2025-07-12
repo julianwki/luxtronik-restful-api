@@ -40,10 +40,12 @@ class PowerConsumptionService(
             .also { logger.debug("Navigation: {}", this) }
 
     private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
-        val betriebszustand = readValue("Betriebszustand")
-            .also { logger.info("Betriebszustand: {}", it.ifEmpty { "\"\"" }) }
-        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX)
-            .also { logger.info("Leistungsaufnahme: {}", it) }
+        @Suppress("ComplexRedundantLet") val betriebszustand = "Betriebszustand"
+            .let { name -> readValue(name) }
+            .also { logger.info("{}: {}", name, it.ifEmpty { "\"\"" }) }
+        @Suppress("ComplexRedundantLet") val leistungsaufnahme = "Leistungsaufnahme"
+            .let { name -> readValue(name, KW_SUFFIX) }
+            .also { logger.info("{}: {}", name, it) }
             .asFuzzyWatt()
         return mapOf(
             "heizung" to when {
@@ -74,15 +76,21 @@ class PowerConsumptionService(
 
     private fun Content.extractLeistungsaufnahmeGesamt() =
         mapOf(
-            "heizung" to readValue("Heizung", KWH_SUFFIX)
-                .also { logger.info("Heizung: {}", it) }
-                .toDouble(),
-            "warmwasser" to readValue("Warmwasser", KWH_SUFFIX)
-                .also { logger.info("Warmwasser: {}", it) }
-                .toDouble(),
-            "gesamt" to readValue("Gesamt", KWH_SUFFIX)
-                .also { logger.info("Gesamt: {}", it) }
-                .toDouble()
+            "heizung" to "Heizung".let { name ->
+                readValue(name, KWH_SUFFIX)
+                    .also { logger.info("{}: {}", name, it) }
+                    .toDouble()
+            },
+            "warmwasser" to "Warmwasser".let { name ->
+                readValue(name, KWH_SUFFIX)
+                    .also { logger.info("{}: {}", name, it) }
+                    .toDouble()
+            },
+            "gesamt" to "Gesamt".let { name ->
+                readValue(name, KWH_SUFFIX)
+                    .also { logger.info("{}: {}", name, it) }
+                    .toDouble()
+            }
         ).also {
             logger.debug("Content: {}", this)
         }
