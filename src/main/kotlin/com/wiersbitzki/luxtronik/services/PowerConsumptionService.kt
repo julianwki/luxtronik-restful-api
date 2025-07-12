@@ -15,21 +15,22 @@ class PowerConsumptionService(
     private val websocketService: WebsocketService
 ) : DataService {
 
-    override fun data(): Map<String, Any> {
-        val data = mutableMapOf<String, Any>()
-        websocketService.execute {
+    override fun data(): Map<String, Any> =
+        websocketService.retrieveData { result ->
             receiveDeserialized<Navigation>()
                 .let { navigation ->
                     send("GET;${navigation.anlagenstatusId}")
                     receiveDeserialized<Content>()
-                        .let { content -> data.put("aktuell", content.extractLeistungsaufnahmeAktuell()) }
+                        .let { content ->
+                            result.put("aktuell", content.extractLeistungsaufnahmeAktuell())
+                        }
                     send("GET;${navigation.leistungsaufnahmeId}")
                     receiveDeserialized<Content>()
-                        .let { content -> data.put("gesamt", content.extractLeistungsaufnahmeGesamt()) }
+                        .let { content ->
+                            result.put("gesamt", content.extractLeistungsaufnahmeGesamt())
+                        }
                 }
-        }
-        return data.also { logger.info("$it") }
-    }
+        }.also { logger.info("$it") }
 
     private val Navigation.anlagenstatusId
         get() = readNavigationId("Informationen", "Anlagenstatus")

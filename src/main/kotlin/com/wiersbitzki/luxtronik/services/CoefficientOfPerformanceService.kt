@@ -14,22 +14,22 @@ class CoefficientOfPerformanceService(
     private val websocketService: WebsocketService
 ) : DataService {
 
-    override fun data(): Map<String, Any> {
-        val data = mutableMapOf<String, Any>()
-        websocketService.execute {
+    override fun data(): Map<String, Any> =
+        websocketService.retrieveData { result ->
             receiveDeserialized<Navigation>()
                 .let { navigation ->
                     send("GET;${navigation.waermemengeId}")
                     val waermemenge = receiveDeserialized<Content>()
                     send("GET;${navigation.leistungsaufnahmeId}")
                     val leistungsaufnahme = receiveDeserialized<Content>()
-                    data.put("heizung", (waermemenge.heizung / leistungsaufnahme.heizung).round())
-                    data.put("warmwasser", (waermemenge.warmwasser / leistungsaufnahme.warmwasser).round())
-                    data.put("gesamt", (waermemenge.gesamt / leistungsaufnahme.gesamt).round())
+                    result.put("heizung", cop(waermemenge.heizung, leistungsaufnahme.heizung))
+                    result.put("warmwasser", cop(waermemenge.warmwasser, leistungsaufnahme.warmwasser))
+                    result.put("gesamt", cop(waermemenge.gesamt, leistungsaufnahme.gesamt))
                 }
-        }
-        return data.also { logger.info("$it") }
-    }
+        }.also { logger.info("$it") }
+
+    private fun cop(waermemenge: Double, leistungsaufnahme: Double) =
+        (waermemenge / leistungsaufnahme).round()
 
     private val Navigation.waermemengeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Wärmemenge")

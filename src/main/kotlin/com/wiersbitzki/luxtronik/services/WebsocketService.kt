@@ -33,7 +33,8 @@ class WebsocketService : Logging {
             }
         }
 
-    fun execute(block: suspend DefaultClientWebSocketSession.() -> Unit) {
+    fun retrieveData(block: suspend DefaultClientWebSocketSession.(result: MutableMap<String, Any>) -> Unit): Map<String, Any> {
+        val result = mutableMapOf<String, Any>()
         runBlocking {
             withTimeout(TIMEOUT) {
                 client
@@ -50,7 +51,7 @@ class WebsocketService : Logging {
                         ) {
                             logger.info("Sending websocket login...")
                                 .also { send("LOGIN;$DEFAULT_PIN") }
-                            block()
+                            block(result)
                             logger.info("Closing websocket...")
                                 .also { close() }
                         }
@@ -59,6 +60,6 @@ class WebsocketService : Logging {
                     }
             }
         }
+        return result
     }
-
 }
