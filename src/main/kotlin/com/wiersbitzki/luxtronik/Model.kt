@@ -9,8 +9,9 @@ import nl.adaptivity.xmlutil.serialization.XmlSerialName
 data class Navigation(
     @XmlId val id: String,
     @XmlElement val data: List<NavigationItem>
-) {
+) : Logging {
     fun readNavigationId(vararg path: String): String {
+        logger.debug(this.toString())
         for (item in data) {
             val first = path[0]
             val rest = path.drop(1)
@@ -55,12 +56,14 @@ data class NavigationItem(
 data class Content(
     @XmlElement val name: String,
     @XmlElement val data: List<ContentItem>
-) {
+) : Logging {
     fun readValue(name: String, suffix: String = "") =
         data.first { it.name.trim() == name }
             .value
             .let { if (suffix.isNotEmpty()) it.substringBefore(suffix) else it }
             .trim()
+            .also { logger.info("{}: {}", name, it) }
+            .also { logger.debug(this.toString()) }
 }
 
 @Serializable

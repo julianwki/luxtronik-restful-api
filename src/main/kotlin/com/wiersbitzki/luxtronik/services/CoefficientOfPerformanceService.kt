@@ -26,39 +26,22 @@ class CoefficientOfPerformanceService(
                     result.put("warmwasser", cop(waermemenge.warmwasser, leistungsaufnahme.warmwasser))
                     result.put("gesamt", cop(waermemenge.gesamt, leistungsaufnahme.gesamt))
                 }
-        }.also { logger.info("$it") }
+        }.also { logger.info(it.toString()) }
 
     private fun cop(waermemenge: Double, leistungsaufnahme: Double) =
         (waermemenge / leistungsaufnahme).round()
 
     private val Navigation.waermemengeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Wärmemenge")
-            .also { logger.debug("Navigation: {}", this) }
     private val Navigation.leistungsaufnahmeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
-            .also { logger.debug("Navigation: {}", this) }
 
     private val Content.heizung
-        get() = "Heizung".let { name ->
-            readValue(name, KWH_SUFFIX)
-                .also { logger.info("{}: {}", name, it) }
-                .toDouble()
-                .also { logger.debug("Content: {}", this) }
-        }
+        get() = readValue("Heizung", KWH_SUFFIX).toDouble()
     private val Content.warmwasser
-        get() = "Warmwasser".let { name ->
-            readValue("Warmwasser", KWH_SUFFIX)
-                .also { logger.info("{}: {}", name, it) }
-                .toDouble()
-                .also { logger.debug("Content: {}", this) }
-        }
+        get() = readValue("Warmwasser", KWH_SUFFIX).toDouble()
     private val Content.gesamt
-        get() = "Gesamt".let { name ->
-            readValue("Gesamt", KWH_SUFFIX)
-                .also { logger.info("{}: {}", name, it) }
-                .toDouble()
-                .also { logger.debug("Content: {}", this) }
-        }
+        get() = readValue("Gesamt", KWH_SUFFIX).toDouble()
     private fun Double.round() = toBigDecimal()
         .setScale(2, RoundingMode.HALF_UP)
         .toDouble()

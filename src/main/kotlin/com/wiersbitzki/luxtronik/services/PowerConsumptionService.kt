@@ -30,23 +30,16 @@ class PowerConsumptionService(
                             result.put("gesamt", content.extractLeistungsaufnahmeGesamt())
                         }
                 }
-        }.also { logger.info("$it") }
+        }.also { logger.info(it.toString()) }
 
     private val Navigation.anlagenstatusId
         get() = readNavigationId("Informationen", "Anlagenstatus")
-            .also { logger.debug("Navigation: {}", this) }
     private val Navigation.leistungsaufnahmeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
-            .also { logger.debug("Navigation: {}", this) }
 
     private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
-        @Suppress("ComplexRedundantLet") val betriebszustand = "Betriebszustand"
-            .let { name -> readValue(name) }
-            .also { logger.info("{}: {}", name, it.ifEmpty { "\"\"" }) }
-        @Suppress("ComplexRedundantLet") val leistungsaufnahme = "Leistungsaufnahme"
-            .let { name -> readValue(name, KW_SUFFIX) }
-            .also { logger.info("{}: {}", name, it) }
-            .asFuzzyWatt()
+        val betriebszustand = readValue("Betriebszustand")
+        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
         return mapOf(
             "heizung" to when {
                 betriebszustand.isHeizung() -> leistungsaufnahme
@@ -63,9 +56,7 @@ class PowerConsumptionService(
                 betriebszustand.isHeizung() -> leistungsaufnahme
                 else -> 0.0
             }
-        ).also {
-            logger.debug("Content: {}", this)
-        }
+        )
     }
 
     private fun String.asFuzzyWatt() = toDouble()
@@ -76,22 +67,8 @@ class PowerConsumptionService(
 
     private fun Content.extractLeistungsaufnahmeGesamt() =
         mapOf(
-            "heizung" to "Heizung".let { name ->
-                readValue(name, KWH_SUFFIX)
-                    .also { logger.info("{}: {}", name, it) }
-                    .toDouble()
-            },
-            "warmwasser" to "Warmwasser".let { name ->
-                readValue(name, KWH_SUFFIX)
-                    .also { logger.info("{}: {}", name, it) }
-                    .toDouble()
-            },
-            "gesamt" to "Gesamt".let { name ->
-                readValue(name, KWH_SUFFIX)
-                    .also { logger.info("{}: {}", name, it) }
-                    .toDouble()
-            }
-        ).also {
-            logger.debug("Content: {}", this)
-        }
+            "heizung" to readValue("Heizung", KWH_SUFFIX).toDouble(),
+            "warmwasser" to readValue("Warmwasser", KWH_SUFFIX).toDouble(),
+            "gesamt" to readValue("Gesamt", KWH_SUFFIX).toDouble()
+        )
 }
