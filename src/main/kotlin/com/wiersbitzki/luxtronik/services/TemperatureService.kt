@@ -1,6 +1,7 @@
 package com.wiersbitzki.luxtronik.services
 
 import com.wiersbitzki.luxtronik.Content
+import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.websocket.send

@@ -1,11 +1,12 @@
 package com.wiersbitzki.luxtronik.services
 
 import com.wiersbitzki.luxtronik.Content
+import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
+import com.wiersbitzki.luxtronik.round
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.websocket.send
 import org.koin.core.annotation.Singleton
-import java.math.RoundingMode
 
 private const val KWH_SUFFIX = "kWh"
 
@@ -22,19 +23,25 @@ class CoefficientOfPerformanceService(
                     val waermemenge = receiveDeserialized<Content>()
                     send("GET;${navigation.leistungsaufnahmeId}")
                     val leistungsaufnahme = receiveDeserialized<Content>()
-                    result.put("heizung", cop(waermemenge.heizung, leistungsaufnahme.heizung))
-                    result.put("warmwasser", cop(waermemenge.warmwasser, leistungsaufnahme.warmwasser))
-                    result.put("gesamt", cop(waermemenge.gesamt, leistungsaufnahme.gesamt))
+                    Pair(waermemenge, leistungsaufnahme).let {
+                        result.put("heizung", it.heizung)
+                        result.put("warmwasser", it.warmwasser)
+                        result.put("gesamt", it.gesamt)
+                    }
                 }
         }.also { logger.info(it.toString()) }
-
-    private fun cop(waermemenge: Double, leistungsaufnahme: Double) =
-        (waermemenge / leistungsaufnahme).round()
 
     private val Navigation.waermemengeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Wärmemenge")
     private val Navigation.leistungsaufnahmeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
+
+    private val Pair<Content, Content>.heizung: Double
+        get() = (first.heizung / second.heizung).round()
+    private val Pair<Content, Content>.warmwasser: Double
+        get() = (first.warmwasser / second.warmwasser).round()
+    private val Pair<Content, Content>.gesamt: Double
+        get() = (first.gesamt / second.gesamt).round()
 
     private val Content.heizung
         get() = readValue("Heizung", KWH_SUFFIX).toDouble()
@@ -42,7 +49,4 @@ class CoefficientOfPerformanceService(
         get() = readValue("Warmwasser", KWH_SUFFIX).toDouble()
     private val Content.gesamt
         get() = readValue("Gesamt", KWH_SUFFIX).toDouble()
-    private fun Double.round() = toBigDecimal()
-        .setScale(2, RoundingMode.HALF_UP)
-        .toDouble()
 }
