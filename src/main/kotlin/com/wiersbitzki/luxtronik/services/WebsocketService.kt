@@ -43,7 +43,7 @@ class WebsocketService(
         runBlocking {
             withTimeout(TIMEOUT) {
                 client
-                    .also { logger.info("Connecting to $host:$port...") }
+                    .also { logger.debug("Connecting to $host:$port...") }
                     .let {
                         it.webSocket(
                             method = HttpMethod.Get,
@@ -54,14 +54,14 @@ class WebsocketService(
                                 header(HttpHeaders.SecWebSocketProtocol, "Lux_WS")
                             }
                         ) {
-                            logger.info("Sending login...")
+                            logger.debug("Sending login...")
                                 .also { send("LOGIN;$pin") }
                             block(result)
-                            logger.info("Closing websocket...")
+                            logger.debug("Closing websocket...")
                                 .also { close() }
                         }
                         it.close()
-                            .also { logger.info("Connection to $host:$port closed") }
+                            .also { logger.debug("Connection to $host:$port closed") }
                     }
             }
         }
