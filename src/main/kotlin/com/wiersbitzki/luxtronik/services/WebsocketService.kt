@@ -10,6 +10,8 @@ import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
+import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.config.tryGetString
 import io.ktor.websocket.close
 import io.ktor.websocket.send
 import kotlinx.coroutines.runBlocking
@@ -18,13 +20,16 @@ import nl.adaptivity.xmlutil.serialization.XML
 import org.koin.core.annotation.Singleton
 import kotlin.time.Duration.Companion.seconds
 
-private const val HOST = "192.168.178.164"
-private const val PORT = 8214
-private const val DEFAULT_PIN = 999999
 private val TIMEOUT = 1.seconds
 
 @Singleton
-class WebsocketService : Logging {
+class WebsocketService(
+    config: ApplicationConfig
+) : Logging {
+
+    private val host = config.tryGetString("ktor.service.websocket.host")!!
+    private val port = config.tryGetString("ktor.service.websocket.port")!!.toInt()
+    private val pin = config.tryGetString("ktor.service.websocket.pin")!!
 
     private val client
         get() = HttpClient(CIO) {
@@ -38,25 +43,25 @@ class WebsocketService : Logging {
         runBlocking {
             withTimeout(TIMEOUT) {
                 client
-                    .also { logger.info("Connecting to $HOST:$PORT...") }
+                    .also { logger.info("Connecting to $host:$port...") }
                     .let {
                         it.webSocket(
                             method = HttpMethod.Get,
-                            host = HOST,
-                            port = PORT,
+                            host = host,
+                            port = port,
                             path = "/",
                             request = {
                                 header(HttpHeaders.SecWebSocketProtocol, "Lux_WS")
                             }
                         ) {
-                            logger.info("Sending websocket login...")
-                                .also { send("LOGIN;$DEFAULT_PIN") }
+                            logger.info("Sending login...")
+                                .also { send("LOGIN;$pin") }
                             block(result)
                             logger.info("Closing websocket...")
                                 .also { close() }
                         }
                         it.close()
-                            .also { logger.info("Connection to $HOST:$PORT closed") }
+                            .also { logger.info("Connection to $host:$port closed") }
                     }
             }
         }

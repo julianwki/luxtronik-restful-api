@@ -4,3 +4,8 @@ ktor:
       - com.wiersbitzki.luxtronik.ApplicationKt.module
   deployment:
     port: 8080
+  service:
+    websocket:
+      host: "$LUXTRONIK_HOST"
+      port: "$LUXTRONIK_PORT:8214"
+      pin: "$LUXTRONIK_PIN:999999"
