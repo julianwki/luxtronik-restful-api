@@ -11,11 +11,10 @@ data class Navigation(
     @XmlElement val data: List<NavigationItem>
 ) : Logging {
     fun readNavigationId(vararg path: String): String {
-        logger.debug(this.toString())
+        logger.trace(this.toString())
         for (item in data) {
-            val first = path[0]
             val rest = path.drop(1)
-            if (item.name.trim() == first) {
+            if (item.name.trim() == path[0]) {
                 return if (rest.isEmpty()) {
                     item.id
                 } else {
@@ -62,8 +61,8 @@ data class Content(
             .value
             .let { if (suffix.isNotEmpty()) it.substringBefore(suffix) else it }
             .trim()
-            .also { logger.info("{}: {}", name, it) }
-            .also { logger.debug(this.toString()) }
+            .also { logger.debug("{}: {}", name, it) }
+            .also { logger.trace(this.toString()) }
 }
 
 @Serializable

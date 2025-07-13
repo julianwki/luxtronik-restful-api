@@ -16,7 +16,7 @@ fun main(args: Array<String>) {
 fun Application.module() {
     configureDependencyInjection()
     configureSerialization()
-    configureCallLogging()
+    configureCallLogging(developmentMode)
     configureCaching()
     configureRouting()
 }
