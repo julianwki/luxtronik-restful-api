@@ -9,10 +9,10 @@ val ktor_simple_cache_version: String by project
 val kotest_version: String by project
 
 plugins {
-    kotlin("jvm") version "2.1.21"
-    id("io.ktor.plugin") version "3.2.1"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.21"
-    id("com.google.devtools.ksp") version "2.1.21-2.0.2"
+    kotlin("jvm") version "2.2.21"
+    id("io.ktor.plugin") version "3.3.3"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.21"
+    id("com.google.devtools.ksp") version "2.3.3"
 }
 
 sourceSets.main {
@@ -23,6 +23,10 @@ group = "com.wiersbitzki.luxtronik"
 version = "0.1.1-beta"
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
+}
+
+kotlin {
+    jvmToolchain(21)
 }
 
 ktor {

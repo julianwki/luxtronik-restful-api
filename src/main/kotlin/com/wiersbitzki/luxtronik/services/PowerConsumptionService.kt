@@ -6,12 +6,12 @@ import com.wiersbitzki.luxtronik.Navigation
 import com.wiersbitzki.luxtronik.asFuzzyWatt
 import io.ktor.client.plugins.websocket.*
 import io.ktor.websocket.*
-import org.koin.core.annotation.Singleton
+import org.koin.core.annotation.Single
 
 private const val KWH_SUFFIX = "kWh"
 private const val KW_SUFFIX = "kW"
 
-@Singleton
+@Single
 class PowerConsumptionService(
     private val websocketService: WebsocketService
 ) : DataService {
