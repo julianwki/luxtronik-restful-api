@@ -19,17 +19,11 @@ class PowerConsumptionService(
     override fun data(): Map<String, Any> =
         websocketService.retrieveData { result ->
             receiveDeserialized<Navigation>()
-                .let { navigation ->
-                    send("GET;${navigation.anlagenstatusId}")
-                    receiveDeserialized<Content>()
-                        .let { content ->
-                            result.put("aktuell", content.extractLeistungsaufnahmeAktuell())
-                        }
-                    send("GET;${navigation.leistungsaufnahmeId}")
-                    receiveDeserialized<Content>()
-                        .let { content ->
-                            result.put("gesamt", content.extractLeistungsaufnahmeGesamt())
-                        }
+                .let {
+                    send("GET;${it.anlagenstatusId}")
+                    result["aktuell"] = receiveDeserialized<Content>().extractLeistungsaufnahmeAktuell()
+                    send("GET;${it.leistungsaufnahmeId}")
+                    result["gesamt"] = receiveDeserialized<Content>().extractLeistungsaufnahmeGesamt()
                 }
         }.also { logger.info(it.toString()) }
 
