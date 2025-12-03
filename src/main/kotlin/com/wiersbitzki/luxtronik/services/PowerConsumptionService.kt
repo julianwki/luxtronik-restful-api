@@ -4,8 +4,8 @@ import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
 import com.wiersbitzki.luxtronik.asFuzzyWatt
-import io.ktor.client.plugins.websocket.receiveDeserialized
-import io.ktor.websocket.send
+import io.ktor.client.plugins.websocket.*
+import io.ktor.websocket.*
 import org.koin.core.annotation.Singleton
 
 private const val KWH_SUFFIX = "kWh"
@@ -36,25 +36,28 @@ class PowerConsumptionService(
         val betriebszustand = readValue("Betriebszustand")
         val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
         return mapOf(
-            "heizung" to when {
-                betriebszustand.isHeizung() -> leistungsaufnahme
-                betriebszustand.isBlank() -> leistungsaufnahme / 2
-                else -> 0.0
-            },
-            "warmwasser" to when {
-                betriebszustand.isWarmwasser() -> leistungsaufnahme
-                betriebszustand.isBlank() -> leistungsaufnahme / 2
-                else -> 0.0
-            },
-            "gesamt" to when {
-                betriebszustand.isNotBlank() -> leistungsaufnahme
-                else -> 0.0
-            }
+            "heizung" to leistungsaufnahme.heizung(betriebszustand),
+            "warmwasser" to leistungsaufnahme.warmwasser(betriebszustand),
+            "gesamt" to leistungsaufnahme
         )
     }
 
-    private fun String.isHeizung() = this == "Heizen"
-    private fun String.isWarmwasser() = this == "WW"
+    private fun Double.heizung(betriebszustand: String) = when {
+        betriebszustand.isHeizung -> this
+        betriebszustand.isWarmwasser -> 0.0
+        else -> this / 2
+    }
+
+    private fun Double.warmwasser(betriebszustand: String) = when {
+        betriebszustand.isWarmwasser -> this
+        betriebszustand.isHeizung -> 0.0
+        else -> this / 2
+    }
+
+    private val String.isHeizung
+        get() = this.equals("Heizen", ignoreCase = true)
+    private val String.isWarmwasser
+        get() = this.equals("WW", ignoreCase = true)
 
     private fun Content.extractLeistungsaufnahmeGesamt() =
         mapOf(
