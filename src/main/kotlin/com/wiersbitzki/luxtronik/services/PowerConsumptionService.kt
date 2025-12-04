@@ -32,32 +32,34 @@ class PowerConsumptionService(
     private val Navigation.leistungsaufnahmeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
 
-    private fun Content.extractLeistungsaufnahmeAktuell(): Map<String, Double> {
-        val betriebszustand = readValue("Betriebszustand")
-        val leistungsaufnahme = readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
-        return mapOf(
-            "heizung" to leistungsaufnahme.heizung(betriebszustand),
-            "warmwasser" to leistungsaufnahme.warmwasser(betriebszustand),
+    private fun Content.extractLeistungsaufnahmeAktuell() =
+        mapOf(
+            "heizung" to betriebszustand.heizung(leistungsaufnahme),
+            "warmwasser" to betriebszustand.warmwasser(leistungsaufnahme),
             "gesamt" to leistungsaufnahme
         )
-    }
 
-    private fun Double.heizung(betriebszustand: String) = when {
-        betriebszustand.isHeizung -> this
-        betriebszustand.isWarmwasser -> 0.0
-        else -> this / 2
-    }
+    private val Content.betriebszustand
+        get() = Betriebszustand.entries
+            .find { it.name == readValue("Betriebszustand").uppercase() } ?: Betriebszustand.UNDEFINED
+    private val Content.leistungsaufnahme
+        get() = readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
 
-    private fun Double.warmwasser(betriebszustand: String) = when {
-        betriebszustand.isWarmwasser -> this
-        betriebszustand.isHeizung -> 0.0
-        else -> this / 2
-    }
+    enum class Betriebszustand {
+        HEIZEN { // Heizung
+            override fun heizung(leistungsaufnahme: Double) = leistungsaufnahme
+            override fun warmwasser(leistungsaufnahme: Double) = 0.0
+        },
+        WW { // Warmwasser
+            override fun heizung(leistungsaufnahme: Double) = 0.0
+            override fun warmwasser(leistungsaufnahme: Double) = leistungsaufnahme
+        },
+        ABT, // Abtauung
+        UNDEFINED;
 
-    private val String.isHeizung
-        get() = this.equals("Heizen", ignoreCase = true)
-    private val String.isWarmwasser
-        get() = this.equals("WW", ignoreCase = true)
+        open fun heizung(leistungsaufnahme: Double) = leistungsaufnahme / 2
+        open fun warmwasser(leistungsaufnahme: Double) = leistungsaufnahme / 2
+    }
 
     private fun Content.extractLeistungsaufnahmeGesamt() =
         mapOf(
