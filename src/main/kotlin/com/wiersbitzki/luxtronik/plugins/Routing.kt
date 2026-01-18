@@ -10,6 +10,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.koin.ktor.ext.inject
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureRouting() {
@@ -18,14 +19,14 @@ fun Application.configureRouting() {
     val temperatureService by inject<TemperatureService>()
     routing {
         route("/leistungsaufnahme") {
-            cacheOutput(10.seconds) {
+            cacheOutput(5.seconds) {
                 get() {
                     call.respond(powerConsumptionService.data())
                 }
             }
         }
         route("/jahreszahl") {
-            cacheOutput(10.seconds) {
+            cacheOutput(1.minutes) {
                 get() {
                     call.respond(coefficientOfPerformanceService.data())
                 }

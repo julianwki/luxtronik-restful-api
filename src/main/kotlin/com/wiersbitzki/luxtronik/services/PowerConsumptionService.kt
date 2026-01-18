@@ -33,17 +33,17 @@ class PowerConsumptionService(
         get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
 
     private fun Content.extractLeistungsaufnahmeAktuell() =
-        mapOf(
-            "heizung" to betriebszustand.heizung(leistungsaufnahme),
-            "warmwasser" to betriebszustand.warmwasser(leistungsaufnahme),
-            "gesamt" to leistungsaufnahme
-        )
+        readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt().let {
+            mapOf(
+                "heizung" to betriebszustand.heizung(it),
+                "warmwasser" to betriebszustand.warmwasser(it),
+                "gesamt" to it
+            )
+        }
 
     private val Content.betriebszustand
         get() = Betriebszustand.entries
             .find { it.name == readValue("Betriebszustand").uppercase() } ?: Betriebszustand.UNDEFINED
-    private val Content.leistungsaufnahme
-        get() = readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
 
     enum class Betriebszustand {
         HEIZEN { // Heizung
