@@ -1,14 +1,19 @@
 package com.wiersbitzki.luxtronik.services
 
 import com.wiersbitzki.luxtronik.Logging
-import io.ktor.client.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.websocket.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.*
-import io.ktor.server.config.*
-import io.ktor.websocket.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
+import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.config.tryGetString
+import io.ktor.websocket.close
+import io.ktor.websocket.send
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import nl.adaptivity.xmlutil.serialization.XML

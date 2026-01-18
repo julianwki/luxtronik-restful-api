@@ -3,8 +3,8 @@ package com.wiersbitzki.luxtronik.services
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
-import io.ktor.client.plugins.websocket.*
-import io.ktor.websocket.*
+import io.ktor.client.plugins.websocket.receiveDeserialized
+import io.ktor.websocket.send
 import org.koin.core.annotation.Single
 
 private const val CELSIUS_SUFFIX = "°C"
