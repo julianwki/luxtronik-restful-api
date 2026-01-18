@@ -20,7 +20,7 @@ sourceSets.main {
 }
 
 group = "com.wiersbitzki.luxtronik"
-version = "0.1.1-beta"
+version = "0.2.0-beta"
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
 }
