@@ -1,18 +1,16 @@
 package com.wiersbitzki.luxtronik
 
 import kotlinx.serialization.Serializable
-import nl.adaptivity.xmlutil.serialization.XmlElement
-import nl.adaptivity.xmlutil.serialization.XmlId
-import nl.adaptivity.xmlutil.serialization.XmlSerialName
 
 @Serializable
 data class Navigation(
-    @XmlId val id: String,
-    @XmlElement val data: List<NavigationItem>
+    val type: String = "Navigation",
+    val items: List<NavigationItem>,
+    val id: String,
 ) : Logging {
     fun readNavigationId(vararg path: String): String {
         logger.trace(this.toString())
-        for (item in data) {
+        for (item in items) {
             val rest = path.drop(1)
             if (item.name.trim() == path[0]) {
                 return if (rest.isEmpty()) {
@@ -27,16 +25,14 @@ data class Navigation(
 }
 
 @Serializable
-@XmlSerialName("item")
 data class NavigationItem(
-    @XmlId val id: String,
-    @XmlElement val name: String,
-    @XmlElement val readOnly: Boolean? = null,
-    @XmlElement val value: String? = null,
-    @XmlElement val data: List<NavigationItem> = emptyList()
+    val items: List<NavigationItem> = emptyList(),
+    val id: String,
+    val name: String,
+    val readOnly: Boolean? = null,
 ) {
     internal fun findNavigationItemWithName(path: List<String>): NavigationItem? {
-        for (item in data) {
+        for (item in items) {
             val first = path[0]
             val rest = path.drop(1)
             if (item.name.trim() == first) {
@@ -53,11 +49,12 @@ data class NavigationItem(
 
 @Serializable
 data class Content(
-    @XmlElement val name: String,
-    @XmlElement val data: List<ContentItem>
+    val type: String = "Content",
+    val items: List<ContentItem>,
+    val name: String,
 ) : Logging {
     fun readValue(name: String, suffix: String = "") =
-        data.first { it.name.trim() == name }
+        items.first { it.name.trim() == name }
             .value
             .let { if (suffix.isNotEmpty()) it.substringBefore(suffix) else it }
             .trim()
@@ -66,9 +63,8 @@ data class Content(
 }
 
 @Serializable
-@XmlSerialName("item")
 data class ContentItem(
-    @XmlId val id: String,
-    @XmlElement val name: String,
-    @XmlElement val value: String,
+    val name: String,
+    val value: String,
+    val id: String,
 )

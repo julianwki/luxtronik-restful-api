@@ -8,14 +8,14 @@ class ModelTest : ShouldSpec({
     context("navigation") {
         val navigation = Navigation(
             id = "navId",
-            data = listOf(
+            items = listOf(
                 NavigationItem(
                     id = "navItemId1",
                     name = "navItem1"
                 ), NavigationItem(
                     id = "navItemId2",
                     name = "navItem2",
-                    data = listOf(
+                    items = listOf(
                         NavigationItem(
                             id = "navItemId2.1",
                             name = "navItem2.1"
@@ -46,7 +46,7 @@ class ModelTest : ShouldSpec({
     context("content") {
         val content = Content(
             name = "some content",
-            data = listOf(
+            items = listOf(
                 ContentItem(
                     id = "contentItemId1",
                     name = "contentItem1",

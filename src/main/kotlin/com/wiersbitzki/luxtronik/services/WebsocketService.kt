@@ -16,7 +16,7 @@ import io.ktor.websocket.close
 import io.ktor.websocket.send
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
-import nl.adaptivity.xmlutil.serialization.XML
+import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.seconds
 
@@ -34,7 +34,7 @@ class WebsocketService(
     private val client
         get() = HttpClient(CIO) {
             install(WebSockets) {
-                contentConverter = KotlinxWebsocketSerializationConverter(XML)
+                contentConverter = KotlinxWebsocketSerializationConverter(Json)
             }
         }
 
