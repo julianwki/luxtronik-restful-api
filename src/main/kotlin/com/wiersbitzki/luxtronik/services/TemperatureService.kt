@@ -3,6 +3,7 @@ package com.wiersbitzki.luxtronik.services
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
+import com.wiersbitzki.luxtronik.receiveContent
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.websocket.send
 import org.koin.core.annotation.Single
@@ -17,19 +18,18 @@ class TemperatureService(
     override fun data(): Map<String, Any> =
         websocketService.retrieveData { result ->
             receiveDeserialized<Navigation>()
-                .let { navigation ->
-                    send("GET;${navigation.temperaturenId}")
-                    val temperaturen = receiveDeserialized<Content>()
-                    result.put("vorlauf", temperaturen.vorlauf)
-                    result.put("ruecklauf", temperaturen.ruecklauf)
-                    result.put("ruecklaufSoll", temperaturen.ruecklaufSoll)
-                    result.put("heissgas", temperaturen.heissgas)
-                    result.put("aussentemperatur", temperaturen.aussentemperatur)
-                    result.put("mitteltemperatur", temperaturen.mitteltemperatur)
-                    result.put("warmwasserIst", temperaturen.warmwasserIst)
-                    result.put("warmwasserSoll", temperaturen.warmwasserSoll)
-                    result.put("solarkollektor", temperaturen.solarkollektor)
-                    result.put("solarspeicher", temperaturen.solarspeicher)
+                .let {
+                    val temperaturen = receiveContent(it.temperaturenId)
+                    result["vorlauf"] = temperaturen.vorlauf
+                    result["ruecklauf"] = temperaturen.ruecklauf
+                    result["ruecklaufSoll"] = temperaturen.ruecklaufSoll
+                    result["heissgas"] = temperaturen.heissgas
+                    result["aussentemperatur"] = temperaturen.aussentemperatur
+                    result["mitteltemperatur"] = temperaturen.mitteltemperatur
+                    result["warmwasserIst"] = temperaturen.warmwasserIst
+                    result["warmwasserSoll"] = temperaturen.warmwasserSoll
+                    result["solarkollektor"] = temperaturen.solarkollektor
+                    result["solarspeicher"] = temperaturen.solarspeicher
                 }
         }.also { logger.info(it.toString()) }
 

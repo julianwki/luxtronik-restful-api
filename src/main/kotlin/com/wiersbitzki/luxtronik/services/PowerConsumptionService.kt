@@ -4,6 +4,7 @@ import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
 import com.wiersbitzki.luxtronik.asFuzzyWatt
+import com.wiersbitzki.luxtronik.receiveContent
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.websocket.send
 import org.koin.core.annotation.Single
@@ -20,10 +21,10 @@ class PowerConsumptionService(
         websocketService.retrieveData { result ->
             receiveDeserialized<Navigation>()
                 .let {
-                    send("GET;${it.anlagenstatusId}")
-                    result["aktuell"] = receiveDeserialized<Content>().extractLeistungsaufnahmeAktuell()
-                    send("GET;${it.leistungsaufnahmeId}")
-                    result["gesamt"] = receiveDeserialized<Content>().extractLeistungsaufnahmeGesamt()
+                    val anlagenstatus = receiveContent(it.anlagenstatusId)
+                    result["aktuell"] = extractLeistungsaufnahmeAktuell(anlagenstatus)
+                    val leistungsaufnahme = receiveContent(it.leistungsaufnahmeId)
+                    result["gesamt"] = extractLeistungsaufnahmeGesamt(leistungsaufnahme)
                 }
         }.also { logger.info(it.toString()) }
 
@@ -32,18 +33,16 @@ class PowerConsumptionService(
     private val Navigation.leistungsaufnahmeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
 
-    private fun Content.extractLeistungsaufnahmeAktuell() =
-        readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt().let {
-            mapOf(
-                "heizung" to betriebszustand.heizung(it),
-                "warmwasser" to betriebszustand.warmwasser(it),
-                "gesamt" to it
+    private fun extractLeistungsaufnahmeAktuell(anlagenstatus: Content): Map<String, Double> {
+        with(Betriebszustand.from(anlagenstatus)) {
+            val leistungsaufnahme = anlagenstatus.readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
+            return mapOf(
+                "heizung" to heizung(leistungsaufnahme),
+                "warmwasser" to warmwasser(leistungsaufnahme),
+                "gesamt" to leistungsaufnahme
             )
         }
-
-    private val Content.betriebszustand
-        get() = Betriebszustand.entries
-            .find { it.name == readValue("Betriebszustand").uppercase() } ?: Betriebszustand.UNDEFINED
+    }
 
     enum class Betriebszustand {
         HEIZEN { // Heizung
@@ -59,12 +58,18 @@ class PowerConsumptionService(
 
         open fun heizung(leistungsaufnahme: Double) = leistungsaufnahme / 2
         open fun warmwasser(leistungsaufnahme: Double) = leistungsaufnahme / 2
+
+        companion object {
+            fun from(anlagenstatus: Content) = Betriebszustand.entries.find {
+                it.name == anlagenstatus.readValue("Betriebszustand").uppercase()
+            } ?: UNDEFINED
+        }
     }
 
-    private fun Content.extractLeistungsaufnahmeGesamt() =
+    private fun extractLeistungsaufnahmeGesamt(leistungsaufnahme: Content) =
         mapOf(
-            "heizung" to readValue("Heizung", KWH_SUFFIX).toDouble(),
-            "warmwasser" to readValue("Warmwasser", KWH_SUFFIX).toDouble(),
-            "gesamt" to readValue("Gesamt", KWH_SUFFIX).toDouble()
+            "heizung" to leistungsaufnahme.readValue("Heizung", KWH_SUFFIX).toDouble(),
+            "warmwasser" to leistungsaufnahme.readValue("Warmwasser", KWH_SUFFIX).toDouble(),
+            "gesamt" to leistungsaufnahme.readValue("Gesamt", KWH_SUFFIX).toDouble()
         )
 }
