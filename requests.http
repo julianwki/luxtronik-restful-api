@@ -3,7 +3,7 @@ GET {{host}}:8080/leistungsaufnahme
 Accept: application/json
 
 ###
-GET {{host}}:8080/jahreszahl
+GET {{host}}:8080/arbeitszahl
 Accept: application/json
 
 ###

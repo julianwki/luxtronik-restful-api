@@ -19,14 +19,14 @@ fun Application.configureRouting() {
     val temperatureService by inject<TemperatureService>()
     routing {
         route("/leistungsaufnahme") {
-            cacheOutput(5.seconds) {
+            cacheOutput(10.seconds) {
                 get() {
                     call.respond(powerConsumptionService.data())
                 }
             }
         }
-        route("/jahreszahl") {
-            cacheOutput(1.minutes) {
+        route("/arbeitszahl") {
+            cacheOutput(10.seconds) {
                 get() {
                     call.respond(coefficientOfPerformanceService.data())
                 }
