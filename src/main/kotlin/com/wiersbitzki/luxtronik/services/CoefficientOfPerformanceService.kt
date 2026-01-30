@@ -4,8 +4,8 @@ import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
 import com.wiersbitzki.luxtronik.asFuzzyWatt
+import com.wiersbitzki.luxtronik.cop
 import com.wiersbitzki.luxtronik.receiveContent
-import com.wiersbitzki.luxtronik.round
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import org.koin.core.annotation.Single
 
@@ -41,32 +41,10 @@ class CoefficientOfPerformanceService(
             val leistungsaufnahme = anlagenstatus.readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
             val heizleistung = anlagenstatus.readValue("Heizleistung Ist", KW_SUFFIX).asFuzzyWatt()
             return mapOf(
-                "heizung" to heizung(heizleistung, leistungsaufnahme),
-                "warmwasser" to warmwasser(heizleistung, leistungsaufnahme),
+                "heizung" to copHeizung(heizleistung, leistungsaufnahme),
+                "warmwasser" to copWarmwasser(heizleistung, leistungsaufnahme),
                 "gesamt" to Pair(heizleistung, leistungsaufnahme).cop()
             )
-        }
-    }
-
-    enum class Betriebszustand {
-        HEIZEN { // Heizung
-            override fun heizung(heizleistung: Double, leistungsaufnahme: Double) =
-                Pair(heizleistung, leistungsaufnahme).cop()
-        },
-        WW { // Warmwasser
-            override fun warmwasser(heizleistung: Double, leistungsaufnahme: Double) =
-                Pair(heizleistung, leistungsaufnahme).cop()
-        },
-        ABT, // Abtauung
-        UNDEFINED;
-
-        open fun heizung(heizleistung: Double, leistungsaufnahme: Double) = 0.0
-        open fun warmwasser(heizleistung: Double, leistungsaufnahme: Double) = 0.0
-
-        companion object {
-            fun from(anlagenstatus: Content) = Betriebszustand.entries.find {
-                it.name == anlagenstatus.readValue("Betriebszustand").uppercase()
-            } ?: UNDEFINED
         }
     }
 
@@ -84,5 +62,3 @@ class CoefficientOfPerformanceService(
     private val Content.gesamt
         get() = readValue("Gesamt", KWH_SUFFIX).toDouble()
 }
-
-private fun Pair<Double, Double>.cop() = if (second != 0.0) (first / second).round() else 0.0

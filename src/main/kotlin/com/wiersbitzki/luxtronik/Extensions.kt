@@ -17,3 +17,5 @@ suspend fun DefaultClientWebSocketSession.receiveContent(id: String): Content {
     send("GET;${id}")
     return receiveDeserialized<Content>()
 }
+
+fun Pair<Double, Double>.cop() = if (second != 0.0) (first / second).round() else 0.0

@@ -44,28 +44,6 @@ class PowerConsumptionService(
         }
     }
 
-    enum class Betriebszustand {
-        HEIZEN { // Heizung
-            override fun heizung(leistungsaufnahme: Double) = leistungsaufnahme
-            override fun warmwasser(leistungsaufnahme: Double) = 0.0
-        },
-        WW { // Warmwasser
-            override fun heizung(leistungsaufnahme: Double) = 0.0
-            override fun warmwasser(leistungsaufnahme: Double) = leistungsaufnahme
-        },
-        ABT, // Abtauung
-        UNDEFINED;
-
-        open fun heizung(leistungsaufnahme: Double) = leistungsaufnahme / 2
-        open fun warmwasser(leistungsaufnahme: Double) = leistungsaufnahme / 2
-
-        companion object {
-            fun from(anlagenstatus: Content) = Betriebszustand.entries.find {
-                it.name == anlagenstatus.readValue("Betriebszustand").uppercase()
-            } ?: UNDEFINED
-        }
-    }
-
     private fun extractLeistungsaufnahmeGesamt(leistungsaufnahme: Content) =
         mapOf(
             "heizung" to leistungsaufnahme.readValue("Heizung", KWH_SUFFIX).toDouble(),
