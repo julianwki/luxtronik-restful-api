@@ -11,12 +11,13 @@ data class Navigation(
     fun readNavigationId(vararg path: String): String {
         logger.trace(this.toString())
         for (item in items) {
-            val rest = path.drop(1)
             if (item.name.trim() == path[0]) {
-                return if (rest.isEmpty()) {
-                    item.id
-                } else {
-                    item.findNavigationItemWithName(rest)?.id ?: break
+                with(path.drop(1)) {
+                    return if (this.isEmpty()) {
+                        item.id
+                    } else {
+                        item.findNavigationItemWithName(this)?.id ?: break
+                    }
                 }
             }
         }
@@ -33,13 +34,9 @@ data class NavigationItem(
 ) {
     internal fun findNavigationItemWithName(path: List<String>): NavigationItem? {
         for (item in items) {
-            val first = path[0]
-            val rest = path.drop(1)
-            if (item.name.trim() == first) {
-                return if (rest.isEmpty()) {
-                    item
-                } else {
-                    item.findNavigationItemWithName(rest)
+            if (item.name.trim() == path[0]) {
+                with(path.drop(1)) {
+                    return if (this.isEmpty()) item else item.findNavigationItemWithName(this)
                 }
             }
         }
