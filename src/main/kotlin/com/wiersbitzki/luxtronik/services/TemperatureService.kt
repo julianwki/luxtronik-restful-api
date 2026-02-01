@@ -1,11 +1,9 @@
 package com.wiersbitzki.luxtronik.services
 
-import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
 import com.wiersbitzki.luxtronik.receiveContent
 import io.ktor.client.plugins.websocket.receiveDeserialized
-import io.ktor.websocket.send
 import org.koin.core.annotation.Single
 
 private const val CELSIUS_SUFFIX = "°C"
@@ -20,40 +18,20 @@ class TemperatureService(
             receiveDeserialized<Navigation>()
                 .let {
                     val temperaturen = receiveContent(it.temperaturenId)
-                    result["vorlauf"] = temperaturen.vorlauf
-                    result["ruecklauf"] = temperaturen.ruecklauf
-                    result["ruecklaufSoll"] = temperaturen.ruecklaufSoll
-                    result["heissgas"] = temperaturen.heissgas
-                    result["aussentemperatur"] = temperaturen.aussentemperatur
-                    result["mitteltemperatur"] = temperaturen.mitteltemperatur
-                    result["warmwasserIst"] = temperaturen.warmwasserIst
-                    result["warmwasserSoll"] = temperaturen.warmwasserSoll
-                    result["solarkollektor"] = temperaturen.solarkollektor
-                    result["solarspeicher"] = temperaturen.solarspeicher
+                    result["vorlauf"] = temperaturen.readDouble("Vorlauf", CELSIUS_SUFFIX)
+                    result["ruecklauf"] = temperaturen.readDouble("Rücklauf", CELSIUS_SUFFIX)
+                    result["ruecklaufSoll"] = temperaturen.readDouble("Rückl.-Soll", CELSIUS_SUFFIX)
+                    result["heissgas"] = temperaturen.readDouble("Heissgas", CELSIUS_SUFFIX)
+                    result["aussentemperatur"] = temperaturen.readDouble("Außentemperatur", CELSIUS_SUFFIX)
+                    result["mitteltemperatur"] = temperaturen.readDouble("Mitteltemperatur", CELSIUS_SUFFIX)
+                    result["warmwasserIst"] = temperaturen.readDouble("Warmwasser-Ist", CELSIUS_SUFFIX)
+                    result["warmwasserSoll"] = temperaturen.readDouble("Warmwasser-Soll", CELSIUS_SUFFIX)
+                    result["solarkollektor"] = temperaturen.readDouble("Solarkollektor", CELSIUS_SUFFIX)
+                    result["solarspeicher"] = temperaturen.readDouble("Solarspeicher", CELSIUS_SUFFIX)
                 }
         }.also { logger.info(it.toString()) }
 
     private val Navigation.temperaturenId
         get() = readNavigationId("Informationen", "Temperaturen")
 
-    private val Content.vorlauf
-        get() = readValue("Vorlauf", CELSIUS_SUFFIX).toDouble()
-    private val Content.ruecklauf
-        get() = readValue("Rücklauf", CELSIUS_SUFFIX).toDouble()
-    private val Content.ruecklaufSoll
-        get() = readValue("Rückl.-Soll", CELSIUS_SUFFIX).toDouble()
-    private val Content.heissgas
-        get() = readValue("Heissgas", CELSIUS_SUFFIX).toDouble()
-    private val Content.aussentemperatur
-        get() = readValue("Außentemperatur", CELSIUS_SUFFIX).toDouble()
-    private val Content.mitteltemperatur
-        get() = readValue("Mitteltemperatur", CELSIUS_SUFFIX).toDouble()
-    private val Content.warmwasserIst
-        get() = readValue("Warmwasser-Ist", CELSIUS_SUFFIX).toDouble()
-    private val Content.warmwasserSoll
-        get() = readValue("Warmwasser-Soll", CELSIUS_SUFFIX).toDouble()
-    private val Content.solarkollektor
-        get() = readValue("Solarkollektor", CELSIUS_SUFFIX).toDouble()
-    private val Content.solarspeicher
-        get() = readValue("Solarspeicher", CELSIUS_SUFFIX).toDouble()
 }

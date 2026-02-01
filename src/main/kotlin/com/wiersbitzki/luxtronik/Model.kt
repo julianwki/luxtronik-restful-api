@@ -57,6 +57,7 @@ data class Content(
             .trim()
             .also { logger.debug("{}: {}", name, it) }
             .also { logger.trace(this.toString()) }
+    fun readDouble(name: String, suffix: String = "") = readValue(name.trim(), suffix).toDouble()
 }
 
 @Serializable

@@ -3,11 +3,10 @@ package com.wiersbitzki.luxtronik.services
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
-import com.wiersbitzki.luxtronik.asFuzzyWatt
 import com.wiersbitzki.luxtronik.receiveContent
 import io.ktor.client.plugins.websocket.receiveDeserialized
-import io.ktor.websocket.send
 import org.koin.core.annotation.Single
+import kotlin.random.Random
 
 private const val KWH_SUFFIX = "kWh"
 private const val KW_SUFFIX = "kW"
@@ -35,7 +34,7 @@ class PowerConsumptionService(
 
     private fun extractLeistungsaufnahmeAktuell(anlagenstatus: Content): Map<String, Double> {
         with(Betriebszustand.from(anlagenstatus)) {
-            val leistungsaufnahme = anlagenstatus.readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
+            val leistungsaufnahme = anlagenstatus.readDouble("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
             return mapOf(
                 "heizung" to heizung(leistungsaufnahme),
                 "warmwasser" to warmwasser(leistungsaufnahme),
@@ -46,8 +45,10 @@ class PowerConsumptionService(
 
     private fun extractLeistungsaufnahmeGesamt(leistungsaufnahme: Content) =
         mapOf(
-            "heizung" to leistungsaufnahme.readValue("Heizung", KWH_SUFFIX).toDouble(),
-            "warmwasser" to leistungsaufnahme.readValue("Warmwasser", KWH_SUFFIX).toDouble(),
-            "gesamt" to leistungsaufnahme.readValue("Gesamt", KWH_SUFFIX).toDouble()
+            "heizung" to leistungsaufnahme.readDouble("Heizung", KWH_SUFFIX),
+            "warmwasser" to leistungsaufnahme.readDouble("Warmwasser", KWH_SUFFIX),
+            "gesamt" to leistungsaufnahme.readDouble("Gesamt", KWH_SUFFIX)
         )
+
+    private fun Double.asFuzzyWatt() = if (this > 0) this * 1000 + Random.nextInt(-5, 5) else 0.0
 }

@@ -3,7 +3,6 @@ package com.wiersbitzki.luxtronik.services
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
-import com.wiersbitzki.luxtronik.asFuzzyWatt
 import com.wiersbitzki.luxtronik.cop
 import com.wiersbitzki.luxtronik.receiveContent
 import io.ktor.client.plugins.websocket.receiveDeserialized
@@ -38,8 +37,8 @@ class CoefficientOfPerformanceService(
 
     private fun extractArbeitszahlAktuell(anlagenstatus: Content): Map<String, Double> {
         with(Betriebszustand.from(anlagenstatus)) {
-            val leistungsaufnahme = anlagenstatus.readValue("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
-            val heizleistung = anlagenstatus.readValue("Heizleistung Ist", KW_SUFFIX).asFuzzyWatt()
+            val leistungsaufnahme = anlagenstatus.readDouble("Leistungsaufnahme", KW_SUFFIX)
+            val heizleistung = anlagenstatus.readDouble("Heizleistung Ist", KW_SUFFIX)
             return mapOf(
                 "heizung" to copHeizung(heizleistung, leistungsaufnahme),
                 "warmwasser" to copWarmwasser(heizleistung, leistungsaufnahme),
@@ -56,9 +55,9 @@ class CoefficientOfPerformanceService(
         )
 
     private val Content.heizung
-        get() = readValue("Heizung", KWH_SUFFIX).toDouble()
+        get() = readDouble("Heizung", KWH_SUFFIX)
     private val Content.warmwasser
-        get() = readValue("Warmwasser", KWH_SUFFIX).toDouble()
+        get() = readDouble("Warmwasser", KWH_SUFFIX)
     private val Content.gesamt
-        get() = readValue("Gesamt", KWH_SUFFIX).toDouble()
+        get() = readDouble("Gesamt", KWH_SUFFIX)
 }
