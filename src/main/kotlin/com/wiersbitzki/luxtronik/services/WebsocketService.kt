@@ -13,6 +13,7 @@ import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.config.tryGetString
 import io.ktor.websocket.close
+import io.ktor.websocket.closeExceptionally
 import io.ktor.websocket.send
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -42,27 +43,38 @@ class WebsocketService(
         val result = mutableMapOf<String, Any>()
         runBlocking {
             withTimeout(TIMEOUT) {
-                client
-                    .also { logger.debug("Connecting to $host:$port...") }
-                    .let {
-                        it.webSocket(
-                            method = HttpMethod.Get,
-                            host = host,
-                            port = port,
-                            path = "/",
-                            request = {
-                                header(HttpHeaders.SecWebSocketProtocol, "Lux_WS")
-                            }
-                        ) {
-                            logger.debug("Sending login...")
-                                .also { send("LOGIN;$pin") }
-                            block(result)
-                            logger.debug("Closing websocket...")
-                                .also { close() }
+                logger.debug("Connecting to $host:$port...")
+                try {
+                    client.webSocket(
+                        method = HttpMethod.Get,
+                        host = host,
+                        port = port,
+                        path = "/",
+                        request = {
+                            header(HttpHeaders.SecWebSocketProtocol, "Lux_WS")
                         }
-                        it.close()
-                            .also { logger.debug("Connection to $host:$port closed") }
+                    ) {
+                        try {
+                            send("LOGIN;$pin").also {
+                                logger.debug("Sending login...")
+                            }
+                            block(result)
+                            close().also {
+                                logger.debug("Closing websocket...")
+                            }
+                        } catch (e: Throwable) {
+                            closeExceptionally(e).also {
+                                logger.error("Closing websocket with exception: ${e.message}")
+                            }
+                        }
                     }
+                } catch (e: Exception) {
+                    logger.error("Catched exception while connected to $host:$port: ${e.message}")
+                } finally {
+                    client.close().also {
+                        logger.debug("Connection to $host:$port closed")
+                    }
+                }
             }
         }
         return result
