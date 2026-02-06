@@ -3,7 +3,6 @@ package com.wiersbitzki.luxtronik.services
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
-import com.wiersbitzki.luxtronik.cop
 import com.wiersbitzki.luxtronik.receiveContent
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import org.koin.core.annotation.Single
@@ -35,24 +34,25 @@ class CoefficientOfPerformanceService(
     private val Navigation.leistungsaufnahmeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
 
-    private fun extractArbeitszahlAktuell(anlagenstatus: Content): Map<String, Double> {
+    private fun extractArbeitszahlAktuell(anlagenstatus: Content) =
         with(Betriebszustand.from(anlagenstatus)) {
             val leistungsaufnahme = anlagenstatus.readDouble("Leistungsaufnahme", KW_SUFFIX)
             val heizleistung = anlagenstatus.readDouble("Heizleistung Ist", KW_SUFFIX)
-            return mapOf(
+            mapOf(
                 "heizung" to copHeizung(heizleistung, leistungsaufnahme),
                 "warmwasser" to copWarmwasser(heizleistung, leistungsaufnahme),
-                "gesamt" to Pair(heizleistung, leistungsaufnahme).cop()
+                "gesamt" to copGesamt(heizleistung, leistungsaufnahme),
             )
         }
-    }
 
     private fun extractArbeitszahlGesamt(waermemenge: Content, leistungsaufnahme: Content) =
-        mapOf(
-            "heizung" to Pair(waermemenge.heizung, leistungsaufnahme.heizung).cop(),
-            "warmwasser" to Pair(waermemenge.warmwasser, leistungsaufnahme.warmwasser).cop(),
-            "gesamt" to Pair(waermemenge.gesamt, leistungsaufnahme.gesamt).cop()
-        )
+        with(Betriebszustand.UNDEFINED) {
+            mapOf(
+                "heizung" to copHeizung(waermemenge.heizung, leistungsaufnahme.heizung),
+                "warmwasser" to copWarmwasser(waermemenge.warmwasser, leistungsaufnahme.warmwasser),
+                "gesamt" to copGesamt(waermemenge.gesamt, leistungsaufnahme.gesamt),
+            )
+        }
 
     private val Content.heizung
         get() = readDouble("Heizung", KWH_SUFFIX)
