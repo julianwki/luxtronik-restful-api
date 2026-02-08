@@ -21,7 +21,7 @@ import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 import kotlin.time.Duration.Companion.seconds
 
-private val TIMEOUT = 1.seconds
+private val TIMEOUT = 2.seconds
 
 @Single
 class WebsocketService(
