@@ -6,6 +6,6 @@ ktor:
     port: 8080
   service:
     websocket:
-      host: "$LUXTRONIK_HOST"
+      host: "$LUXTRONIK_HOST:127.0.0.1"
       port: "$LUXTRONIK_PORT:8214"
       pin: "$LUXTRONIK_PIN:999999"
