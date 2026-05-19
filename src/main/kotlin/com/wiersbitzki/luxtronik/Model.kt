@@ -12,12 +12,8 @@ data class Navigation(
         logger.trace(this.toString())
         for (item in items) {
             if (item.name.trim() == path[0]) {
-                with(path.drop(1)) {
-                    return if (this.isEmpty()) {
-                        item.id
-                    } else {
-                        item.findNavigationItemWithName(this)?.id ?: break
-                    }
+                return path.drop(1).let {
+                    if (it.isEmpty()) item.id else item.findNavigationItemWithName(it)?.id ?: break
                 }
             }
         }
@@ -35,8 +31,8 @@ data class NavigationItem(
     internal fun findNavigationItemWithName(path: List<String>): NavigationItem? {
         for (item in items) {
             if (item.name.trim() == path[0]) {
-                with(path.drop(1)) {
-                    return if (this.isEmpty()) item else item.findNavigationItemWithName(this)
+                return path.drop(1).let {
+                    if (it.isEmpty()) item else item.findNavigationItemWithName(it)
                 }
             }
         }
@@ -57,6 +53,7 @@ data class Content(
             .trim()
             .also { logger.debug("{}: {}", name, it) }
             .also { logger.trace(this.toString()) }
+
     fun readDouble(name: String, suffix: String = "") = readValue(name.trim(), suffix).toDouble()
 }
 

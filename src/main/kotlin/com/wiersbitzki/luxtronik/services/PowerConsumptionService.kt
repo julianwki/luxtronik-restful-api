@@ -4,7 +4,7 @@ import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
 import com.wiersbitzki.luxtronik.receiveContent
-import io.ktor.client.plugins.websocket.receiveDeserialized
+import io.ktor.client.plugins.websocket.*
 import org.koin.core.annotation.Single
 import kotlin.random.Random
 
@@ -32,16 +32,15 @@ class PowerConsumptionService(
     private val Navigation.leistungsaufnahmeId
         get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
 
-    private fun extractLeistungsaufnahmeAktuell(anlagenstatus: Content): Map<String, Double> {
-        with(Betriebszustand.from(anlagenstatus)) {
+    private fun extractLeistungsaufnahmeAktuell(anlagenstatus: Content) =
+        Betriebszustand.from(anlagenstatus).let {
             val leistungsaufnahme = anlagenstatus.readDouble("Leistungsaufnahme", KW_SUFFIX).asFuzzyWatt()
-            return mapOf(
-                "heizung" to heizung(leistungsaufnahme),
-                "warmwasser" to warmwasser(leistungsaufnahme),
+            mapOf(
+                "heizung" to it.heizung(leistungsaufnahme),
+                "warmwasser" to it.warmwasser(leistungsaufnahme),
                 "gesamt" to leistungsaufnahme
             )
         }
-    }
 
     private fun extractLeistungsaufnahmeGesamt(leistungsaufnahme: Content) =
         mapOf(

@@ -1,53 +1,48 @@
 package com.wiersbitzki.luxtronik.plugins
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.plugins.calllogging.CallLogging
-import io.ktor.server.plugins.calllogging.processingTimeMillis
-import io.ktor.server.plugins.origin
-import io.ktor.server.request.httpMethod
-import io.ktor.server.request.path
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
+import io.ktor.server.plugins.calllogging.*
+import io.ktor.server.request.*
 import org.slf4j.event.Level
 
 
 fun Application.configureCallLogging(logAllCalls: Boolean = false) {
     install(CallLogging) {
         level = Level.INFO
-        filter { call ->
-            with(call) {
-                request.path().startsWith("/") && (logAllCalls || response.status() != HttpStatusCode.OK)
-            }
+        filter {
+            it.request.path().startsWith("/") && (logAllCalls || it.response.status() != HttpStatusCode.OK)
         }
-        format { call ->
-            with(call) {
-                val coloredStatus = call.response.status().let {
+        format {
+            val coloredStatus = it.response.status()
+                .let { statusCode ->
                     when {
-                        it == null -> "\u001B[33mUNKNOWN\u001B[0m"
-                        it.value < HttpStatusCode.MultipleChoices.value -> "\u001B[32m$it\u001B[0m"
-                        it.value < HttpStatusCode.BadRequest.value -> "\u001B[33m$it\u001B[0m"
-                        else -> "\u001B[31m$it\u001B[0m"
+                        statusCode == null -> "\u001B[33mUNKNOWN\u001B[0m"
+                        statusCode.value < HttpStatusCode.MultipleChoices.value -> "\u001B[32m$statusCode\u001B[0m"
+                        statusCode.value < HttpStatusCode.BadRequest.value -> "\u001B[33m$statusCode\u001B[0m"
+                        else -> "\u001B[31m$statusCode\u001B[0m"
                     }
                 }
-                val coloredMethod = request.httpMethod.value.let { "\u001B[36m$it\u001B[0m" }
-                val queryParams = request.queryParameters.entries().let {
-                    if (it.isEmpty()) "none"
-                    else it.joinToString(", ") { "${it.key}=${it.value}" }
+            val coloredMethod = it.request.httpMethod.value.let { value -> "\u001B[36m$value\u001B[0m" }
+            val queryParams = it.request.queryParameters.entries()
+                .let { entries ->
+                    if (entries.isEmpty()) "none"
+                    else entries.joinToString(", ") { entry -> "${entry.key}=${entry.value}" }
                 }
-                """
-                |
-                |------------------------ Request Details ------------------------
-                |Status: $coloredStatus
-                |Method: $coloredMethod
-                |Path: ${request.path()}
-                |Query Parameters: $queryParams
-                |Remote Host: ${request.origin.remoteHost}
-                |User Agent: ${request.headers["User-Agent"]}
-                |Duration: ${processingTimeMillis()}ms
-                |------------------------------------------------------------------
-                |
-                """.trimMargin()
-            }
+            """
+            |
+            |------------------------ Request Details ------------------------
+            |Status: $coloredStatus
+            |Method: $coloredMethod
+            |Path: ${it.request.path()}
+            |Query Parameters: $queryParams
+            |Remote Host: ${it.request.origin.remoteHost}
+            |User Agent: ${it.request.headers["User-Agent"]}
+            |Duration: ${it.processingTimeMillis()}ms
+            |------------------------------------------------------------------
+            |
+            """.trimMargin()
         }
     }
 }

@@ -4,7 +4,7 @@ import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
 import com.wiersbitzki.luxtronik.receiveContent
-import io.ktor.client.plugins.websocket.receiveDeserialized
+import io.ktor.client.plugins.websocket.*
 import org.koin.core.annotation.Single
 
 private const val KWH_SUFFIX = "kWh"
@@ -35,22 +35,22 @@ class CoefficientOfPerformanceService(
         get() = readNavigationId("Informationen", "Energiemonitor", "Leistungsaufnahme")
 
     private fun extractArbeitszahlAktuell(anlagenstatus: Content) =
-        with(Betriebszustand.from(anlagenstatus)) {
+        Betriebszustand.from(anlagenstatus).let {
             val leistungsaufnahme = anlagenstatus.readDouble("Leistungsaufnahme", KW_SUFFIX)
             val heizleistung = anlagenstatus.readDouble("Heizleistung Ist", KW_SUFFIX)
             mapOf(
-                "heizung" to copHeizung(heizleistung, leistungsaufnahme),
-                "warmwasser" to copWarmwasser(heizleistung, leistungsaufnahme),
-                "gesamt" to copGesamt(heizleistung, leistungsaufnahme),
+                "heizung" to it.copHeizung(heizleistung, leistungsaufnahme),
+                "warmwasser" to it.copWarmwasser(heizleistung, leistungsaufnahme),
+                "gesamt" to it.copGesamt(heizleistung, leistungsaufnahme),
             )
         }
 
     private fun extractArbeitszahlGesamt(waermemenge: Content, leistungsaufnahme: Content) =
-        with(Betriebszustand.UNDEFINED) {
+        Betriebszustand.UNDEFINED.let {
             mapOf(
-                "heizung" to copHeizung(waermemenge.heizung, leistungsaufnahme.heizung),
-                "warmwasser" to copWarmwasser(waermemenge.warmwasser, leistungsaufnahme.warmwasser),
-                "gesamt" to copGesamt(waermemenge.gesamt, leistungsaufnahme.gesamt),
+                "heizung" to it.copHeizung(waermemenge.heizung, leistungsaufnahme.heizung),
+                "warmwasser" to it.copWarmwasser(waermemenge.warmwasser, leistungsaufnahme.warmwasser),
+                "gesamt" to it.copGesamt(waermemenge.gesamt, leistungsaufnahme.gesamt),
             )
         }
 
