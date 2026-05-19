@@ -4,7 +4,7 @@ import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
 import com.wiersbitzki.luxtronik.receiveContent
-import io.ktor.client.plugins.websocket.*
+import io.ktor.client.plugins.websocket.receiveDeserialized
 import org.koin.core.annotation.Single
 
 private const val KWH_SUFFIX = "kWh"

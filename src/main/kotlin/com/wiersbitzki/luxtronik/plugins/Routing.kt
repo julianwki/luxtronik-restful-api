@@ -10,7 +10,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.koin.ktor.ext.inject
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureRouting() {
