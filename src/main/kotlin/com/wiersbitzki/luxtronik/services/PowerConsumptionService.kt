@@ -3,7 +3,6 @@ package com.wiersbitzki.luxtronik.services
 import com.wiersbitzki.luxtronik.Content
 import com.wiersbitzki.luxtronik.DataService
 import com.wiersbitzki.luxtronik.Navigation
-import com.wiersbitzki.luxtronik.receiveContent
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import org.koin.core.annotation.Single
 import kotlin.random.Random
