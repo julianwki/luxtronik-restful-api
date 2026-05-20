@@ -14,7 +14,7 @@ class CoefficientOfPerformanceService(
     private val websocketService: WebsocketService
 ) : DataService {
 
-    override fun data(): Map<String, Any> =
+    override suspend fun data(): Map<String, Any> =
         websocketService.retrieveData { result ->
             receiveDeserialized<Navigation>()
                 .let {

@@ -15,7 +15,6 @@ import io.ktor.server.config.tryGetString
 import io.ktor.websocket.close
 import io.ktor.websocket.closeExceptionally
 import io.ktor.websocket.send
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
@@ -31,43 +30,41 @@ class WebsocketService(
     private val pin: String = config.tryGetString("ktor.service.websocket.pin")!!
 ) : Logging {
 
-    fun retrieveData(block: suspend DefaultClientWebSocketSession.(result: MutableMap<String, Any>) -> Unit): Map<String, Any> {
+    suspend fun retrieveData(
+        block: suspend DefaultClientWebSocketSession.(result: MutableMap<String, Any>) -> Unit
+    ): Map<String, Any> {
         val result = mutableMapOf<String, Any>()
-        runBlocking {
-            withTimeout(TIMEOUT) {
-                with(HttpClient(CIO) {
-                    install(WebSockets) {
-                        contentConverter = KotlinxWebsocketSerializationConverter(Json)
-                    }
-                }) {
-                    logger.debug("Connecting to $host:$port...")
-                    try {
-                        webSocket(
-                            method = HttpMethod.Get,
-                            host = host,
-                            port = port.toInt(),
-                            path = "/",
-                            request = {
-                                header(HttpHeaders.SecWebSocketProtocol, "Lux_WS")
-                            }
-                        ) {
-                            try {
-                                logger.debug("Sending login...")
-                                send("LOGIN;$pin")
-                                block(result)
-                                close()
-                                logger.debug("Session closed.")
-                            } catch (e: Throwable) {
-                                closeExceptionally(e)
-                                logger.error("Session closed with exception: ${e.message}")
-                            }
+        withTimeout(TIMEOUT) {
+            with(HttpClient(CIO) {
+                install(WebSockets) {
+                    contentConverter = KotlinxWebsocketSerializationConverter(Json)
+                }
+            }) {
+                logger.debug("Connecting to $host:$port...")
+                try {
+                    webSocket(
+                        method = HttpMethod.Get,
+                        host = host,
+                        port = port.toInt(),
+                        path = "/",
+                        request = {
+                            header(HttpHeaders.SecWebSocketProtocol, "Lux_WS")
                         }
-                    } catch (e: Exception) {
-                        logger.error("Catched exception while connected to $host:$port: ${e.message}")
-                    } finally {
-                        close()
-                        logger.debug("Connection to $host:$port closed")
+                    ) {
+                        try {
+                            send("LOGIN;$pin").also { logger.debug("Sending login...") }
+                            block(result).also { logger.debug("Running block.") }
+                            close().also { logger.debug("Session closed.") }
+                        } catch (e: Throwable) {
+                            closeExceptionally(e)
+                            throw e
+                        }
                     }
+                } catch (e: Throwable) {
+                    logger.error("Catched exception while connected to $host:$port: ${e.message}")
+                } finally {
+                    close()
+                    logger.debug("Connection to $host:$port closed")
                 }
             }
         }
