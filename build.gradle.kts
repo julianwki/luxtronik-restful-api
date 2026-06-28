@@ -1,12 +1,12 @@
 import io.ktor.plugin.features.*
 
-val kotlin_version: String by project
-val ktor_version: String by project
-val logback_version: String by project
-val koin_version: String by project
-val koin_ksp_version: String by project
-val ktor_simple_cache_version: String by project
-val kotest_version: String by project
+val kotlinVersion = providers.gradleProperty("kotlin_version").get()
+val ktorVersion = providers.gradleProperty("ktor_version").get()
+val logbackVersion = providers.gradleProperty("logback_version").get()
+val koinVersion = providers.gradleProperty("koin_version").get()
+val koinKspVersion = providers.gradleProperty("koin_ksp_version").get()
+val ktorSimpleCacheVersion = providers.gradleProperty("ktor_simple_cache_version").get()
+val kotestVersion = providers.gradleProperty("kotest_version").get()
 
 plugins {
     kotlin("jvm") version "2.3.21"
@@ -55,24 +55,24 @@ repositories {
 
 dependencies {
     // Ktor
-    implementation("io.ktor:ktor-server-core:${ktor_version}")
-    implementation("io.ktor:ktor-server-content-negotiation:${ktor_version}")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:${ktor_version}")
-    implementation("io.ktor:ktor-server-call-logging:${ktor_version}")
-    implementation("io.ktor:ktor-server-netty:${ktor_version}")
-    implementation("io.ktor:ktor-client-websockets:${ktor_version}")
-    implementation("io.ktor:ktor-client-cio:${ktor_version}")
-    implementation("ch.qos.logback:logback-classic:${logback_version}")
-    implementation("com.ucasoft.ktor:ktor-simple-cache:${ktor_simple_cache_version}")
-    implementation("com.ucasoft.ktor:ktor-simple-memory-cache:${ktor_simple_cache_version}")
+    implementation("io.ktor:ktor-server-core:${ktorVersion}")
+    implementation("io.ktor:ktor-server-content-negotiation:${ktorVersion}")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:${ktorVersion}")
+    implementation("io.ktor:ktor-server-call-logging:${ktorVersion}")
+    implementation("io.ktor:ktor-server-netty:${ktorVersion}")
+    implementation("io.ktor:ktor-client-websockets:${ktorVersion}")
+    implementation("io.ktor:ktor-client-cio:${ktorVersion}")
+    implementation("ch.qos.logback:logback-classic:${logbackVersion}")
+    implementation("com.ucasoft.ktor:ktor-simple-cache:${ktorSimpleCacheVersion}")
+    implementation("com.ucasoft.ktor:ktor-simple-memory-cache:${ktorSimpleCacheVersion}")
     // Koin
-    implementation("io.insert-koin:koin-ktor:$koin_version")
-    implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
-    implementation("io.insert-koin:koin-annotations:$koin_ksp_version")
-    ksp("io.insert-koin:koin-ksp-compiler:$koin_ksp_version")
+    implementation("io.insert-koin:koin-ktor:$koinVersion")
+    implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
+    implementation("io.insert-koin:koin-annotations:$koinKspVersion")
+    ksp("io.insert-koin:koin-ksp-compiler:$koinKspVersion")
     // testing
     implementation("io.ktor:ktor-server-config-yaml")
     testImplementation("io.ktor:ktor-server-test-host")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
-    testImplementation("io.kotest:kotest-runner-junit5:$kotest_version")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
 }
