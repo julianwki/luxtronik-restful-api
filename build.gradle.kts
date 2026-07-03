@@ -20,7 +20,7 @@ sourceSets.main {
 }
 
 group = "com.wiersbitzki.luxtronik"
-version = "0.4.3-beta"
+version = "0.5.0-beta"
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
 }
@@ -32,7 +32,7 @@ kotlin {
 ktor {
     docker {
         jreVersion.set(JavaVersion.VERSION_21)
-        localImageName.set("luxtronic-restful-api")
+        localImageName.set("luxtronik-restful-api")
         imageTag.set(version.toString())
         portMappings.set(
             listOf(
