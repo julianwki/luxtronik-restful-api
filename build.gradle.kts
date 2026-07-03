@@ -1,6 +1,8 @@
-import io.ktor.plugin.features.*
+import io.ktor.plugin.features.DockerPortMapping
+import io.ktor.plugin.features.DockerPortMappingProtocol
 
 val kotlinVersion = providers.gradleProperty("kotlin_version").get()
+val javaVersion = providers.gradleProperty("java_version").get()
 val ktorVersion = providers.gradleProperty("ktor_version").get()
 val logbackVersion = providers.gradleProperty("logback_version").get()
 val koinVersion = providers.gradleProperty("koin_version").get()
@@ -26,12 +28,12 @@ application {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(javaVersion.toInt())
 }
 
 ktor {
     docker {
-        jreVersion.set(JavaVersion.VERSION_21)
+        jreVersion.set(JavaVersion.toVersion(javaVersion))
         localImageName.set("luxtronik-restful-api")
         imageTag.set(version.toString())
         portMappings.set(
