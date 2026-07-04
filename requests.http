@@ -9,3 +9,15 @@ Accept: application/json
 ###
 GET {{host}}:8080/temperaturen
 Accept: application/json
+
+###
+GET {{host}}:8080/warmwasserExtra/an
+Accept: application/json
+
+###
+GET {{host}}:8080/warmwasserExtra/aus
+Accept: application/json
+
+###
+GET {{host}}:8080/warmwasserExtra/status
+Accept: application/json
