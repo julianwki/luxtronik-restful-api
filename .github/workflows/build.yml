@@ -1,6 +1,5 @@
-name: Kotlin CI
+name: Luxtronik Restful API CI
 
-# Triggers the workflow on push or pull request events for the main branch
 on:
   push:
     branches: [ "main", "build-with-github-action" ]
@@ -13,25 +12,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Fetch the source code from the repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Set up the Java environment required for Kotlin/Gradle
-      - name: Set up JDK 21
+      - name: Set JDK version
+        id: read_property
+        uses: christian-draeger/read-properties@1.1.1
+        with:
+          path: gradle.properties
+          properties: 'java_version'
+
+      - name: Set up JDK ${{ steps.read_property.outputs.java_version }}
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'zulu' # Popular, reliable OpenJDK distribution
+          java-version: ${{ steps.read_property.outputs.java_version }}
+          distribution: 'zulu'
 
-      # 3. Optimize builds by configuring Gradle caching automatically
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # 4. Ensure the Gradle wrapper has execution permissions on Linux
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
-      # 5. Compile the Kotlin code and run all unit tests
       - name: Build and Test with Gradle
         run: ./gradlew clean build --no-daemon
