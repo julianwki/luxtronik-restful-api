@@ -28,24 +28,26 @@ class SingleRegisterModbusService(
                 this.timeout = 3000
             }
 
-    fun activate(function: String, register: Int) = switch(function, register, OnOff.ON)
-    fun deactivate(function: String, register: Int) = switch(function, register, OnOff.OFF)
+    fun activate(function: String, register: Int) =
+        switch(function, register, OnOff.ON)
+            .also { logger.info("Activated $function with register $register") }
+    fun deactivate(function: String, register: Int) =
+        switch(function, register, OnOff.OFF)
+            .also { logger.info("Deactivated $function with register $register") }
 
     private enum class OnOff(
         val value: Int
     ) {
         ON(1),
-        OFF(2)
+        OFF(0)
     }
 
-    private fun switch(function: String, register: Int, onOff: OnOff): Map<String, Any> {
+    private fun switch(function: String, register: Int, onOff: OnOff) {
         try {
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
             logger.debug("Writing register $register of slave $modbusSlave with value ${onOff.value}...")
-            val registerValue = ModbusTCPTransaction(connection).writeRegister(register, onOff.value)
-            return mapOf(function to registerValue)
-                .also { logger.info(it.toString()) }
+            ModbusTCPTransaction(connection).writeRegister(register, onOff.value)
         } catch (e: Exception) {
             logger.error("Error while writing register $function with value ${onOff.value}", e)
             throw e
@@ -54,15 +56,13 @@ class SingleRegisterModbusService(
         }
     }
 
-    fun status(function: String, register: Int): Map<String, Any> {
+    fun status(function: String, register: Int): Any {
         try {
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
             logger.debug("Reading register $register of slave $modbusSlave...")
-            val registerValue = ModbusTCPTransaction(connection)
-                .readRegister(register)
-            return mapOf(function to registerValue)
-                .also { logger.info(it.toString()) }
+            return ModbusTCPTransaction(connection).readRegister(register)
+                .also { logger.info("Read $function with register $register and value $it") }
         } catch (e: Exception) {
             logger.error("Error while reading register $function", e)
             throw e
