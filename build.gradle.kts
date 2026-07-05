@@ -9,6 +9,7 @@ val koinVersion = providers.gradleProperty("koin_version").get()
 val koinKspVersion = providers.gradleProperty("koin_ksp_version").get()
 val ktorSimpleCacheVersion = providers.gradleProperty("ktor_simple_cache_version").get()
 val kotestVersion = providers.gradleProperty("kotest_version").get()
+val j2modVersion = providers.gradleProperty("j2mod_version").get()
 
 plugins {
     kotlin("jvm") version "2.3.21"
@@ -72,6 +73,8 @@ dependencies {
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     implementation("io.insert-koin:koin-annotations:$koinKspVersion")
     ksp("io.insert-koin:koin-ksp-compiler:$koinKspVersion")
+    // ModbusTCP
+    implementation("com.ghgande:j2mod:$j2modVersion")
     // testing
     implementation("io.ktor:ktor-server-config-yaml")
     testImplementation("io.ktor:ktor-server-test-host")

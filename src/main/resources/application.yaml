@@ -12,4 +12,5 @@ ktor:
     modbus:
       host: "$LUXTRONIK_HOST:127.0.0.1"
       port: "$LUXTRONIK_PORT:502"
+      unitId: 1
 
