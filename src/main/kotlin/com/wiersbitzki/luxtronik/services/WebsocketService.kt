@@ -61,10 +61,10 @@ class WebsocketService(
                         }
                     }
                 } catch (e: Throwable) {
-                    logger.error("Catched exception while connected to $host:$port: ${e.message}")
+                    logger.error("Catched exception while connected to $host:$port", e)
+                    throw e
                 } finally {
-                    close()
-                    logger.debug("Connection to $host:$port closed")
+                    close().also { logger.debug("Connection to $host:$port closed") }
                 }
             }
         }

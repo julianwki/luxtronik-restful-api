@@ -21,7 +21,7 @@ class SingleRegisterModbusService(
     private val modbusSlave: Int = config.tryGetString("ktor.service.modbus.unitId")!!.toInt()
 ) : Logging {
 
-    val connection =
+    private val connection =
         TCPMasterConnection(InetAddress.getByName(modbusHost))
             .apply {
                 this.port = modbusPort
@@ -42,12 +42,12 @@ class SingleRegisterModbusService(
         OFF(0)
     }
 
+    @Synchronized
     private fun switch(function: String, register: Int, onOff: OnOff) {
         try {
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
-            logger.debug("Writing register $register of slave $modbusSlave with value ${onOff.value}...")
-            ModbusTCPTransaction(connection).writeRegister(register, onOff.value)
+            ModbusTCPTransaction(connection).writeRegister(register, onOff)
         } catch (e: Exception) {
             logger.error("Error while writing register $function with value ${onOff.value}", e)
             throw e
@@ -56,11 +56,11 @@ class SingleRegisterModbusService(
         }
     }
 
+    @Synchronized
     fun status(function: String, register: Int): Any {
         try {
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
-            logger.debug("Reading register $register of slave $modbusSlave...")
             return ModbusTCPTransaction(connection).readRegister(register)
                 .also { logger.info("Read $function with register $register and value $it") }
         } catch (e: Exception) {
@@ -71,14 +71,16 @@ class SingleRegisterModbusService(
         }
     }
 
-    private fun ModbusTCPTransaction.writeRegister(register: Int, value: Int) =
-        WriteSingleRegisterRequest(register, SimpleRegister(value))
+    private fun ModbusTCPTransaction.writeRegister(register: Int, onOff: OnOff) =
+        WriteSingleRegisterRequest(register, SimpleRegister(onOff.value))
             .apply {
                 unitID = modbusSlave
             }.let {
                 request = it
                 execute()
                 response as WriteSingleRegisterResponse
+            }.also {
+                logger.debug("Writing register $register of slave $modbusSlave with value ${onOff.value}...")
             }.registerValue
 
     private fun ModbusTCPTransaction.readRegister(register: Int) =
@@ -89,5 +91,8 @@ class SingleRegisterModbusService(
                 request = it
                 execute()
                 response as ReadMultipleRegistersResponse
+            }.also {
+                logger.debug("Reading register $register of slave $modbusSlave...")
             }.registers[0].value
+
 }

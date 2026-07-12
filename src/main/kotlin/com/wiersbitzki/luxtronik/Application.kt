@@ -3,7 +3,7 @@ package com.wiersbitzki.luxtronik
 import com.wiersbitzki.luxtronik.plugins.configureCaching
 import com.wiersbitzki.luxtronik.plugins.configureCallLogging
 import com.wiersbitzki.luxtronik.plugins.configureDependencyInjection
-import com.wiersbitzki.luxtronik.plugins.configureRouting
+import com.wiersbitzki.luxtronik.plugins.configureEndpoints
 import com.wiersbitzki.luxtronik.plugins.configureSerialization
 import io.ktor.server.application.Application
 import io.ktor.util.logging.KtorSimpleLogger
@@ -18,7 +18,7 @@ fun Application.module() {
     configureSerialization()
     configureCallLogging(developmentMode)
     configureCaching()
-    configureRouting()
+    configureEndpoints()
 }
 
 interface Logging {

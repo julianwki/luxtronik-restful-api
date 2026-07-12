@@ -15,7 +15,7 @@ import io.ktor.server.routing.routing
 import org.koin.ktor.ext.inject
 import kotlin.time.Duration.Companion.seconds
 
-fun Application.configureRouting() {
+fun Application.configureEndpoints() {
     val powerConsumptionService by inject<PowerConsumptionService>()
     val coefficientOfPerformanceService by inject<CoefficientOfPerformanceService>()
     val temperatureService by inject<TemperatureService>()
@@ -24,21 +24,33 @@ fun Application.configureRouting() {
         route("/leistungsaufnahme") {
             cacheOutput(10.seconds) {
                 get() {
-                    call.respond(powerConsumptionService.data())
+                    try {
+                        call.respond(powerConsumptionService.data())
+                    } catch (_: Exception) {
+                        call.respond(HttpStatusCode.InternalServerError)
+                    }
                 }
             }
         }
         route("/arbeitszahl") {
             cacheOutput(10.seconds) {
                 get() {
-                    call.respond(coefficientOfPerformanceService.data())
+                    try {
+                        call.respond(coefficientOfPerformanceService.data())
+                    } catch (_: Exception) {
+                        call.respond(HttpStatusCode.InternalServerError)
+                    }
                 }
             }
         }
         route("/temperaturen") {
             cacheOutput(10.seconds) {
                 get() {
-                    call.respond(temperatureService.data())
+                    try {
+                        call.respond(temperatureService.data())
+                    } catch (_: Exception) {
+                        call.respond(HttpStatusCode.InternalServerError)
+                    }
                 }
             }
         }
