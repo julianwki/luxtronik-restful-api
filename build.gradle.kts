@@ -1,6 +1,10 @@
 import io.ktor.plugin.features.DockerPortMapping
 import io.ktor.plugin.features.DockerPortMappingProtocol
 
+val appName = providers.gradleProperty("app_name").get()
+val appGroup = providers.gradleProperty("app_group").get()
+val appVersion = providers.gradleProperty("app_version").get()
+
 val kotlinVersion = providers.gradleProperty("kotlin_version").get()
 val javaVersion = providers.gradleProperty("java_version").get()
 val ktorVersion = providers.gradleProperty("ktor_version").get()
@@ -22,8 +26,6 @@ sourceSets.main {
     kotlin.srcDirs("build/generated/ksp/main/kotlin")
 }
 
-group = "com.wiersbitzki.luxtronik"
-version = "0.6.0-beta"
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
 }
@@ -35,8 +37,8 @@ kotlin {
 ktor {
     docker {
         jreVersion.set(JavaVersion.toVersion(javaVersion))
-        localImageName.set("luxtronik-restful-api")
-        imageTag.set(version.toString())
+        localImageName.set(appName)
+        imageTag.set(appVersion)
         portMappings.set(
             listOf(
                 DockerPortMapping(
