@@ -57,7 +57,7 @@ class SingleRegisterModbusService(
     }
 
     @Synchronized
-    fun status(function: String, register: Int): Any {
+    fun status(function: String, register: Int): Int {
         try {
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()

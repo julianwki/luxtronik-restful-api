@@ -20,4 +20,4 @@ Accept: application/json
 
 ###
 GET {{host}}:8080/warmwasserExtra/status
-Accept: application/json
+Accept: text/plain

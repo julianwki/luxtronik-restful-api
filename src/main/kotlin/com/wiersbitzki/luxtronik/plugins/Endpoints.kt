@@ -8,6 +8,7 @@ import com.wiersbitzki.luxtronik.services.TemperatureService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
@@ -59,7 +60,8 @@ fun Application.configureEndpoints() {
             val register = 10071
             get("status") {
                 try {
-                    call.respond(singleRegisterModbusService.status(function, register))
+                    singleRegisterModbusService.status(function, register)
+                        .let { call.respondText(it.toString()) }
                 } catch (_: Exception) {
                     call.respond(HttpStatusCode.InternalServerError)
                 }
