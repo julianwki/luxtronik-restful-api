@@ -1,5 +1,6 @@
 package com.wiersbitzki.luxtronik
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -62,4 +63,37 @@ data class ContentItem(
     val name: String,
     val value: String,
     val id: String,
+)
+
+@Serializable
+data class Forecast(
+    val latitude: Double,
+    val longitude: Double,
+    @SerialName("generationtime_ms")
+    val generationtimeMs: Double,
+    @SerialName("utc_offset_seconds")
+    val utcOffsetSeconds: Int,
+    val timezone: String,
+    @SerialName("timezone_abbreviation")
+    val timezoneAbbreviation: String,
+    val elevation: Double,
+    @SerialName("current_units")
+    val currentUnits: CurrentUnits,
+    val current: Current,
+)
+
+@Serializable
+data class CurrentUnits(
+    val time: String,
+    val interval: String,
+    @SerialName("temperature_2m")
+    val temperature2m: String,
+)
+
+@Serializable
+data class Current(
+    val time: String,
+    val interval: Int,
+    @SerialName("temperature_2m")
+    val temperature2m: Double,
 )

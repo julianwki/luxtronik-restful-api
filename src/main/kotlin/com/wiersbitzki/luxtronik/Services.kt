@@ -16,7 +16,9 @@ interface SwitchService : Logging {
     fun activate(function: String, register: Int)
     fun deactivate(function: String, register: Int)
     fun switch(function: String, register: Int, onOff: OnOff)
-    fun status(function: String, register: Int): Int
+    fun read(function: String, register: Int): Int
+    fun readInput(function: String, register: Int): Int
+    fun write(function: String, register: Int, value: Int)
 }
 
 enum class OnOff(
@@ -24,4 +26,8 @@ enum class OnOff(
 ) {
     ON(1),
     OFF(0)
+}
+
+interface AdjustmentService : Logging {
+    suspend fun adjust()
 }

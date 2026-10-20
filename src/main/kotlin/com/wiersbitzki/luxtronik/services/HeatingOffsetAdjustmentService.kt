@@ -1,0 +1,91 @@
+package com.wiersbitzki.luxtronik.services
+
+import com.wiersbitzki.luxtronik.AdjustmentService
+import com.wiersbitzki.luxtronik.Forecast
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.get
+import io.ktor.client.request.parameter
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.config.tryGetString
+import kotlinx.serialization.json.Json
+import org.koin.core.annotation.Single
+import java.math.BigDecimal
+import java.math.BigDecimal.valueOf
+import java.math.RoundingMode
+
+@Single
+class HeatingOffsetAdjustmentService(
+    config: ApplicationConfig,
+    private val longitude: String = config.tryGetString("ktor.location.longitude")!!,
+    private val latitude: String = config.tryGetString("ktor.location.latitude")!!,
+    private val timezone: String = config.tryGetString("ktor.location.timezone")!!,
+    private val singleRegisterModbusService: SingleRegisterModbusService
+) : AdjustmentService {
+
+    private val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+                prettyPrint = true
+            })
+        }
+        defaultRequest {
+            url("https://api.open-meteo.com/v1/forecast")
+            contentType(ContentType.Application.Json)
+        }
+    }
+    private val localTemperature: BigDecimal
+        get() = singleRegisterModbusService.readInput("Außentemperatur", 10108)
+            .toBigDecimal()
+            .also { logger.debug("###### local temperature: {}", it.format()) }
+
+    override suspend fun adjust() {
+        val offsetHeizenSoll = localTemperature
+            .minus(forecastTemperature())
+            .multiply(valueOf(2))
+            .setScale(-1, RoundingMode.HALF_DOWN)
+            .divide(valueOf(2))
+            .toInt()
+            .also { logger.info("###### Offset Heizen Soll: {}", it.format()) }
+        if (offsetHeizenSoll == 0) {
+            singleRegisterModbusService.write("Modus Heizen", 10000, 0)
+            singleRegisterModbusService.write("Offset Heizen", 10002, 0)
+            return
+        }
+        val modusHeizenIst = singleRegisterModbusService.read("Modus Heizen", 10000)
+            .also { logger.info("###### Modus Heizen: {}", it) }
+        val modusHeizenSoll = 2
+        if (modusHeizenIst != modusHeizenSoll) {
+            singleRegisterModbusService.write("Modus Heizen", 10000, modusHeizenSoll)
+        }
+        val offsetHeizenIst = singleRegisterModbusService.read("Offset Heizen", 10002)
+            .also { logger.info("###### Offset Heizen Ist: {}", it.format()) }
+        if (offsetHeizenSoll != offsetHeizenIst) {
+            singleRegisterModbusService.write("Offset Heizen", 10002, offsetHeizenSoll)
+        }
+    }
+
+    private suspend fun forecastTemperature() =
+        client.get() {
+            parameter("latitude", latitude)
+            parameter("longitude", longitude)
+            parameter("current", "temperature_2m")
+            parameter("timezone", timezone)
+        }.body<Forecast>()
+            .current
+            .temperature2m
+            .toBigDecimal()
+            .multiply(BigDecimal.TEN)
+            .setScale(0, RoundingMode.HALF_UP)
+            .also { logger.debug("###### forecast temperature: {}", it.format()) }
+
+    private fun Int.format() = "%03.1f".format(this / 10.0)
+    private fun BigDecimal.format() = "%03.1f".format(this.toDouble() / 10.0)
+}

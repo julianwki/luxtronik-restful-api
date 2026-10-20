@@ -1,6 +1,8 @@
 package com.wiersbitzki.luxtronik.services
 
 import com.ghgande.j2mod.modbus.io.ModbusTCPTransaction
+import com.ghgande.j2mod.modbus.msg.ReadInputRegistersRequest
+import com.ghgande.j2mod.modbus.msg.ReadInputRegistersResponse
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersRequest
 import com.ghgande.j2mod.modbus.msg.ReadMultipleRegistersResponse
 import com.ghgande.j2mod.modbus.msg.WriteSingleRegisterRequest
@@ -52,7 +54,7 @@ class SingleRegisterModbusService(
     }
 
     @Synchronized
-    override fun status(function: String, register: Int): Int {
+    override fun read(function: String, register: Int): Int {
         try {
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
@@ -66,8 +68,41 @@ class SingleRegisterModbusService(
         }
     }
 
+    @Synchronized
+    override fun readInput(function: String, register: Int): Int {
+        try {
+            logger.debug("Connecting to $modbusHost:$modbusPort...")
+            connection.connect()
+            return ModbusTCPTransaction(connection).readInputRegister(register)
+                .also { logger.info("Read $function with register $register and value $it") }
+        } catch (e: Exception) {
+            logger.error("Error while reading register $function", e)
+            throw e
+        } finally {
+            if (connection.isConnected) connection.close()
+        }
+    }
+
+    @Synchronized
+    override fun write(function: String, register: Int, value: Int) {
+        try {
+            logger.debug("Connecting to $modbusHost:$modbusPort...")
+            connection.connect()
+            ModbusTCPTransaction(connection).writeRegister(register, value)
+                .also { logger.info("Read $function with register $register and value $it") }
+        } catch (e: Exception) {
+            logger.error("Error while reading register $function", e)
+            throw e
+        } finally {
+            if (connection.isConnected) connection.close()
+        }
+    }
+
     private fun ModbusTCPTransaction.writeRegister(register: Int, onOff: OnOff) =
-        WriteSingleRegisterRequest(register, SimpleRegister(onOff.value))
+        writeRegister(register, onOff.value)
+
+    private fun ModbusTCPTransaction.writeRegister(register: Int, value: Int) =
+        WriteSingleRegisterRequest(register, SimpleRegister(value))
             .apply {
                 unitID = modbusSlave
             }.let {
@@ -75,7 +110,7 @@ class SingleRegisterModbusService(
                 execute()
                 response as WriteSingleRegisterResponse
             }.also {
-                logger.debug("Writing register $register of slave $modbusSlave with value ${onOff.value}...")
+                logger.debug("Writing register $register of slave $modbusSlave with value ${value}...")
             }.registerValue
 
     private fun ModbusTCPTransaction.readRegister(register: Int) =
@@ -90,4 +125,15 @@ class SingleRegisterModbusService(
                 logger.debug("Reading register $register of slave $modbusSlave...")
             }.registers[0].value
 
+    private fun ModbusTCPTransaction.readInputRegister(register: Int) =
+        ReadInputRegistersRequest(register, 1)
+            .apply {
+                unitID = modbusSlave
+            }.let {
+                request = it
+                execute()
+                response as ReadInputRegistersResponse
+            }.also {
+                logger.debug("Reading register $register of slave $modbusSlave...")
+            }.registers[0].value
 }
