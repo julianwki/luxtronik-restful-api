@@ -24,4 +24,8 @@ Accept: text/plain
 
 ###
 GET {{host}}:8080/offsetHeizen/status
-Accept: application/json
+Accept: text/plain
+
+###
+POST {{host}}:8080/offsetHeizen/reset
+Accept: text/plain

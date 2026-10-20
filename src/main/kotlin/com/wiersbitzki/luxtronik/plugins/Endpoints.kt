@@ -86,12 +86,18 @@ fun Application.configureEndpoints() {
             }
         }
         route("/offsetHeizen") {
-            val function = "Offset Heizen"
-            val register = 10002
             get("status") {
                 try {
-                    singleRegisterModbusService.read(function, register)
+                    heatingOffsetAdjustmentService.status()
                         .let { call.respondText(it.toString()) }
+                } catch (_: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+            post("reset") {
+                try {
+                    heatingOffsetAdjustmentService.reset()
+                    call.respond(HttpStatusCode.OK)
                 } catch (_: Exception) {
                     call.respond(HttpStatusCode.InternalServerError)
                 }

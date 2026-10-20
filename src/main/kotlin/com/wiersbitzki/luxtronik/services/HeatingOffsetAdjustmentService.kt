@@ -62,8 +62,7 @@ class HeatingOffsetAdjustmentService(
             .toInt()
             .also { logger.info("###### Offset Heizen Soll: {}", it.format()) }
         if (offsetHeizenSoll == 0) {
-            singleRegisterModbusService.write(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER, 0)
-            singleRegisterModbusService.write(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER, 0)
+            reset()
             return
         }
         val modusHeizenIst = singleRegisterModbusService.read(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER)
@@ -72,11 +71,18 @@ class HeatingOffsetAdjustmentService(
         if (modusHeizenIst != modusHeizenSoll) {
             singleRegisterModbusService.write(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER, modusHeizenSoll)
         }
-        val offsetHeizenIst = singleRegisterModbusService.read(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER)
-            .also { logger.info("###### Offset Heizen Ist: {}", it.format()) }
+        val offsetHeizenIst = status()
         if (offsetHeizenSoll != offsetHeizenIst) {
             singleRegisterModbusService.write(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER, offsetHeizenSoll)
         }
+    }
+
+    override suspend fun status() = singleRegisterModbusService.read(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER)
+        .also { logger.info("###### Offset Heizen Ist: {}", it.format()) }
+
+    override suspend fun reset() {
+        singleRegisterModbusService.write(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER, 0)
+        singleRegisterModbusService.write(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER, 0)
     }
 
     private suspend fun forecastTemperature() =

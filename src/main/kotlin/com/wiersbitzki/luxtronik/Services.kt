@@ -30,4 +30,6 @@ enum class OnOff(
 
 interface AdjustmentService : Logging {
     suspend fun adjust()
+    suspend fun status(): Int
+    suspend fun reset()
 }
