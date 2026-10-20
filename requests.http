@@ -21,3 +21,7 @@ Accept: application/json
 ###
 GET {{host}}:8080/warmwasserExtra/status
 Accept: text/plain
+
+###
+GET {{host}}:8080/offsetHeizen/status
+Accept: application/json

@@ -2,6 +2,7 @@ package com.wiersbitzki.luxtronik.plugins
 
 import com.ucasoft.ktor.simpleCache.cacheOutput
 import com.wiersbitzki.luxtronik.services.CoefficientOfPerformanceService
+import com.wiersbitzki.luxtronik.services.HeatingOffsetAdjustmentService
 import com.wiersbitzki.luxtronik.services.PowerConsumptionService
 import com.wiersbitzki.luxtronik.services.SingleRegisterModbusService
 import com.wiersbitzki.luxtronik.services.TemperatureService
@@ -21,6 +22,7 @@ fun Application.configureEndpoints() {
     val coefficientOfPerformanceService by inject<CoefficientOfPerformanceService>()
     val temperatureService by inject<TemperatureService>()
     val singleRegisterModbusService by inject<SingleRegisterModbusService>()
+    val heatingOffsetAdjustmentService by inject<HeatingOffsetAdjustmentService>()
     routing {
         route("/leistungsaufnahme") {
             cacheOutput(10.seconds) {
@@ -60,7 +62,7 @@ fun Application.configureEndpoints() {
             val register = 10071
             get("status") {
                 try {
-                    singleRegisterModbusService.status(function, register)
+                    singleRegisterModbusService.read(function, register)
                         .let { call.respondText(it.toString()) }
                 } catch (_: Exception) {
                     call.respond(HttpStatusCode.InternalServerError)
@@ -78,6 +80,18 @@ fun Application.configureEndpoints() {
                 try {
                     singleRegisterModbusService.deactivate(function, register)
                     call.respond(HttpStatusCode.OK)
+                } catch (_: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+        }
+        route("/offsetHeizen") {
+            val function = "Offset Heizen"
+            val register = 10002
+            get("status") {
+                try {
+                    singleRegisterModbusService.read(function, register)
+                        .let { call.respondText(it.toString()) }
                 } catch (_: Exception) {
                     call.respond(HttpStatusCode.InternalServerError)
                 }

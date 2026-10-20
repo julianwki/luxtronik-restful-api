@@ -20,6 +20,13 @@ import java.math.BigDecimal
 import java.math.BigDecimal.valueOf
 import java.math.RoundingMode
 
+private const val AUSSENTEMPERATUR = "Außentemperatur"
+private const val AUSSENTEMPERATUR_REGISTER = 10108
+private const val MODUS_HEIZEN = "Modus Heizen"
+private const val MODUS_HEIZEN_REGISTER = 10000
+private const val OFFSET_HEIZEN = "Offset Heizen"
+private const val OFFSET_HEIZEN_REGISTER = 10002
+
 @Single
 class HeatingOffsetAdjustmentService(
     config: ApplicationConfig,
@@ -42,7 +49,7 @@ class HeatingOffsetAdjustmentService(
         }
     }
     private val localTemperature: BigDecimal
-        get() = singleRegisterModbusService.readInput("Außentemperatur", 10108)
+        get() = singleRegisterModbusService.readInput(AUSSENTEMPERATUR, AUSSENTEMPERATUR_REGISTER)
             .toBigDecimal()
             .also { logger.debug("###### local temperature: {}", it.format()) }
 
@@ -55,20 +62,20 @@ class HeatingOffsetAdjustmentService(
             .toInt()
             .also { logger.info("###### Offset Heizen Soll: {}", it.format()) }
         if (offsetHeizenSoll == 0) {
-            singleRegisterModbusService.write("Modus Heizen", 10000, 0)
-            singleRegisterModbusService.write("Offset Heizen", 10002, 0)
+            singleRegisterModbusService.write(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER, 0)
+            singleRegisterModbusService.write(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER, 0)
             return
         }
-        val modusHeizenIst = singleRegisterModbusService.read("Modus Heizen", 10000)
+        val modusHeizenIst = singleRegisterModbusService.read(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER)
             .also { logger.info("###### Modus Heizen: {}", it) }
         val modusHeizenSoll = 2
         if (modusHeizenIst != modusHeizenSoll) {
-            singleRegisterModbusService.write("Modus Heizen", 10000, modusHeizenSoll)
+            singleRegisterModbusService.write(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER, modusHeizenSoll)
         }
-        val offsetHeizenIst = singleRegisterModbusService.read("Offset Heizen", 10002)
+        val offsetHeizenIst = singleRegisterModbusService.read(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER)
             .also { logger.info("###### Offset Heizen Ist: {}", it.format()) }
         if (offsetHeizenSoll != offsetHeizenIst) {
-            singleRegisterModbusService.write("Offset Heizen", 10002, offsetHeizenSoll)
+            singleRegisterModbusService.write(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER, offsetHeizenSoll)
         }
     }
 
