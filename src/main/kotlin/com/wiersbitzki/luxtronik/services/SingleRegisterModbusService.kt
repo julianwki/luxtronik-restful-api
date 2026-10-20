@@ -7,7 +7,8 @@ import com.ghgande.j2mod.modbus.msg.WriteSingleRegisterRequest
 import com.ghgande.j2mod.modbus.msg.WriteSingleRegisterResponse
 import com.ghgande.j2mod.modbus.net.TCPMasterConnection
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister
-import com.wiersbitzki.luxtronik.Logging
+import com.wiersbitzki.luxtronik.OnOff
+import com.wiersbitzki.luxtronik.SwitchService
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.config.tryGetString
 import org.koin.core.annotation.Single
@@ -19,7 +20,7 @@ class SingleRegisterModbusService(
     private val modbusHost: String = config.tryGetString("ktor.service.modbus.host")!!,
     private val modbusPort: Int = config.tryGetString("ktor.service.modbus.port")!!.toInt(),
     private val modbusSlave: Int = config.tryGetString("ktor.service.modbus.unitId")!!.toInt()
-) : Logging {
+) : SwitchService {
 
     private val connection =
         TCPMasterConnection(InetAddress.getByName(modbusHost))
@@ -28,22 +29,16 @@ class SingleRegisterModbusService(
                 this.timeout = 3000
             }
 
-    fun activate(function: String, register: Int) =
+    override fun activate(function: String, register: Int) =
         switch(function, register, OnOff.ON)
             .also { logger.info("Activated $function with register $register") }
-    fun deactivate(function: String, register: Int) =
+
+    override fun deactivate(function: String, register: Int) =
         switch(function, register, OnOff.OFF)
             .also { logger.info("Deactivated $function with register $register") }
 
-    private enum class OnOff(
-        val value: Int
-    ) {
-        ON(1),
-        OFF(0)
-    }
-
     @Synchronized
-    private fun switch(function: String, register: Int, onOff: OnOff) {
+    override fun switch(function: String, register: Int, onOff: OnOff) {
         try {
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
@@ -57,7 +52,7 @@ class SingleRegisterModbusService(
     }
 
     @Synchronized
-    fun status(function: String, register: Int): Int {
+    override fun status(function: String, register: Int): Int {
         try {
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
