@@ -59,7 +59,7 @@ class SingleRegisterModbusService(
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
             return ModbusTCPTransaction(connection).readRegister(register)
-                .also { logger.info("Read $function with register $register and value $it") }
+                .also { logger.debug("Read $function with register $register and value $it") }
         } catch (e: Exception) {
             logger.error("Error while reading register $function", e)
             throw e
@@ -74,7 +74,7 @@ class SingleRegisterModbusService(
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
             return ModbusTCPTransaction(connection).readInputRegister(register)
-                .also { logger.info("Read $function with register $register and value $it") }
+                .also { logger.debug("Read $function with register $register and value $it") }
         } catch (e: Exception) {
             logger.error("Error while reading register $function", e)
             throw e
@@ -89,7 +89,7 @@ class SingleRegisterModbusService(
             logger.debug("Connecting to $modbusHost:$modbusPort...")
             connection.connect()
             ModbusTCPTransaction(connection).writeRegister(register, value)
-                .also { logger.info("Read $function with register $register and value $it") }
+                .also { logger.debug("Wrote $function with register $register and value $it") }
         } catch (e: Exception) {
             logger.error("Error while reading register $function", e)
             throw e

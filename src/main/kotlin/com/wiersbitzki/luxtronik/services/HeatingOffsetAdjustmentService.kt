@@ -48,25 +48,30 @@ class HeatingOffsetAdjustmentService(
             contentType(ContentType.Application.Json)
         }
     }
-    private val localTemperature: BigDecimal
+    private val aussentemperatur: BigDecimal
         get() = singleRegisterModbusService.readInput(AUSSENTEMPERATUR, AUSSENTEMPERATUR_REGISTER)
             .toBigDecimal()
-            .also { logger.debug("###### local temperature: {}", it.format()) }
+            .also { logger.debug("$AUSSENTEMPERATUR: {}", it.format()) }
 
     override suspend fun adjust() {
+        val forecastTemperature = forecastTemperature()
+        val localTemperature = aussentemperatur
         val offsetHeizenSoll = localTemperature
-            .minus(forecastTemperature())
+            .minus(forecastTemperature)
             .multiply(valueOf(2))
-            .setScale(-1, RoundingMode.HALF_DOWN)
+            .setScale(-1, RoundingMode.DOWN)
             .divide(valueOf(2))
             .toInt()
-            .also { logger.info("###### Offset Heizen Soll: {}", it.format()) }
+        logger.info("Forecast/Local {}°C/{}°C, calculated Offset is {}K",
+            forecastTemperature.format(),
+            localTemperature.format(),
+            offsetHeizenSoll.format()
+        )
         if (offsetHeizenSoll == 0) {
             reset()
             return
         }
         val modusHeizenIst = singleRegisterModbusService.read(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER)
-            .also { logger.info("###### Modus Heizen: {}", it) }
         val modusHeizenSoll = 2
         if (modusHeizenIst != modusHeizenSoll) {
             singleRegisterModbusService.write(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER, modusHeizenSoll)
@@ -74,15 +79,19 @@ class HeatingOffsetAdjustmentService(
         val offsetHeizenIst = status()
         if (offsetHeizenSoll != offsetHeizenIst) {
             singleRegisterModbusService.write(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER, offsetHeizenSoll)
+            logger.info("Change $OFFSET_HEIZEN to {}K", offsetHeizenSoll.format())
+        } else {
+            logger.info("$OFFSET_HEIZEN does not need to be changed")
         }
     }
 
     override suspend fun status() = singleRegisterModbusService.read(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER)
-        .also { logger.info("###### Offset Heizen Ist: {}", it.format()) }
+        .also { logger.info("$OFFSET_HEIZEN is {}K", it.format()) }
 
     override suspend fun reset() {
         singleRegisterModbusService.write(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER, 0)
         singleRegisterModbusService.write(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER, 0)
+        logger.info("Reset $OFFSET_HEIZEN to 0K")
     }
 
     private suspend fun forecastTemperature() =
@@ -92,12 +101,12 @@ class HeatingOffsetAdjustmentService(
             parameter("current", "temperature_2m")
             parameter("timezone", timezone)
         }.body<Forecast>()
+            .also { logger.debug("Forecast: {}", Json.encodeToString(it)) }
             .current
             .temperature2m
             .toBigDecimal()
             .multiply(BigDecimal.TEN)
             .setScale(0, RoundingMode.HALF_UP)
-            .also { logger.debug("###### forecast temperature: {}", it.format()) }
 
     private fun Int.format() = "%03.1f".format(this / 10.0)
     private fun BigDecimal.format() = "%03.1f".format(this.toDouble() / 10.0)

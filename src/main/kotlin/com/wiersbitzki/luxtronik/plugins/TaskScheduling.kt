@@ -7,7 +7,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.ktor.ext.inject
-import kotlin.time.Duration.Companion.minutes
+import java.time.Duration
+import java.time.LocalTime
+import java.time.temporal.ChronoUnit
+import kotlin.time.toKotlinDuration
+
+private val now: LocalTime
+    get() = LocalTime.now()
 
 fun Application.configureScheduling() {
     val logger = KtorSimpleLogger(this::class.simpleName!!)
@@ -19,7 +25,15 @@ fun Application.configureScheduling() {
             } catch (e: Exception) {
                 logger.error("Scheduled task failed", e)
             }
-            delay(15.minutes)
+            val nextRun = now.nextRun()
+            logger.info("Heating offset adjustment will run again at {}", nextRun)
+            delay(nextRun.delay())
         }
     }
 }
+
+private fun LocalTime.nextRun(minuteOfHour: Long = 15) =
+    (minuteOfHour - (this.minute % minuteOfHour))
+        .let { this.plusMinutes(it).truncatedTo(ChronoUnit.MINUTES) }
+
+private fun LocalTime.delay() = Duration.between(now, this).toKotlinDuration()
