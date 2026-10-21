@@ -10,6 +10,7 @@ import org.koin.ktor.ext.inject
 import java.time.Duration
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toKotlinDuration
 
 private val now: LocalTime
@@ -19,6 +20,7 @@ fun Application.configureScheduling() {
     val logger = KtorSimpleLogger(this::class.simpleName!!)
     val heatingOffsetAdjustmentService by inject<HeatingOffsetAdjustmentService>()
     launch(Dispatchers.Default) {
+        delay(1.minutes)
         while (true) {
             try {
                 heatingOffsetAdjustmentService.adjust()
