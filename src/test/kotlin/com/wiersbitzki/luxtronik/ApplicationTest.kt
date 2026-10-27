@@ -1,7 +1,7 @@
 package com.wiersbitzki.luxtronik
 
 import io.kotest.core.spec.style.ShouldSpec
-import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.config.ApplicationConfig
@@ -15,12 +15,11 @@ class ApplicationTest : ShouldSpec({
                 environment {
                     config = ApplicationConfig("application.yaml")
                 }
-                client.get("/leistungsaufnahme").apply {
-                    status shouldBeIn listOf(HttpStatusCode.OK, HttpStatusCode.InternalServerError)
+                client.get("/metrics").apply {
+                    status shouldBe HttpStatusCode.OK
                 }
             }
         }
     }
-
 
 })

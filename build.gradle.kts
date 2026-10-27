@@ -14,6 +14,7 @@ val koinKspVersion = providers.gradleProperty("koin_ksp_version").get()
 val ktorSimpleCacheVersion = providers.gradleProperty("ktor_simple_cache_version").get()
 val kotestVersion = providers.gradleProperty("kotest_version").get()
 val j2modVersion = providers.gradleProperty("j2mod_version").get()
+val micrometerVersion = "1.17.2"
 
 plugins {
     kotlin("jvm") version "2.3.21"
@@ -65,6 +66,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core:${ktorVersion}")
     implementation("io.ktor:ktor-server-call-logging:${ktorVersion}")
     implementation("io.ktor:ktor-server-netty:${ktorVersion}")
+    implementation("io.ktor:ktor-server-metrics-micrometer-jvm:${ktorVersion}")
     implementation("io.ktor:ktor-client-core:${ktorVersion}")
     implementation("io.ktor:ktor-client-content-negotiation:${ktorVersion}")
     implementation("io.ktor:ktor-client-cio:${ktorVersion}")
@@ -72,6 +74,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:${logbackVersion}")
     implementation("com.ucasoft.ktor:ktor-simple-cache:${ktorSimpleCacheVersion}")
     implementation("com.ucasoft.ktor:ktor-simple-memory-cache:${ktorSimpleCacheVersion}")
+    implementation("io.micrometer:micrometer-registry-prometheus:${micrometerVersion}")
     // Koin
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")

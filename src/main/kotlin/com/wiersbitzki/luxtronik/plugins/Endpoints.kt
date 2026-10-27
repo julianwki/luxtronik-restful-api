@@ -1,11 +1,7 @@
 package com.wiersbitzki.luxtronik.plugins
 
 import com.ucasoft.ktor.simpleCache.cacheOutput
-import com.wiersbitzki.luxtronik.services.CoefficientOfPerformanceService
-import com.wiersbitzki.luxtronik.services.HeatingOffsetAdjustmentService
-import com.wiersbitzki.luxtronik.services.PowerConsumptionService
-import com.wiersbitzki.luxtronik.services.SingleRegisterModbusService
-import com.wiersbitzki.luxtronik.services.TemperatureService
+import com.wiersbitzki.luxtronik.services.*
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.response.respond
@@ -14,16 +10,27 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.koin.ktor.ext.inject
 import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureEndpoints() {
+    val prometheusMeterRegistry by inject<PrometheusMeterRegistry>()
     val powerConsumptionService by inject<PowerConsumptionService>()
     val coefficientOfPerformanceService by inject<CoefficientOfPerformanceService>()
     val temperatureService by inject<TemperatureService>()
     val singleRegisterModbusService by inject<SingleRegisterModbusService>()
     val heatingOffsetAdjustmentService by inject<HeatingOffsetAdjustmentService>()
     routing {
+        route("/metrics") {
+            get {
+                try {
+                    call.respondText { prometheusMeterRegistry.scrape() }
+                } catch (_: Exception) {
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
+            }
+        }
         route("/leistungsaufnahme") {
             cacheOutput(10.seconds) {
                 get() {

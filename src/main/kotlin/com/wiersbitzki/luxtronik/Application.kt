@@ -4,6 +4,7 @@ import com.wiersbitzki.luxtronik.plugins.configureCaching
 import com.wiersbitzki.luxtronik.plugins.configureCallLogging
 import com.wiersbitzki.luxtronik.plugins.configureDependencyInjection
 import com.wiersbitzki.luxtronik.plugins.configureEndpoints
+import com.wiersbitzki.luxtronik.plugins.configurePrometheus
 import com.wiersbitzki.luxtronik.plugins.configureScheduling
 import com.wiersbitzki.luxtronik.plugins.configureSerialization
 import io.ktor.server.application.Application
@@ -16,6 +17,7 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
     configureDependencyInjection()
+    configurePrometheus()
     configureSerialization()
     configureCallLogging(developmentMode)
     configureCaching()

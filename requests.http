@@ -1,31 +1,35 @@
-###
+### Metrics
+GET {{host}}:8080/metrics
+Accept: text/plain
+
+### Leistungsaufnahme
 GET {{host}}:8080/leistungsaufnahme
 Accept: application/json
 
-###
+### Arbeitszahl
 GET {{host}}:8080/arbeitszahl
 Accept: application/json
 
-###
+### Temperaturen
 GET {{host}}:8080/temperaturen
 Accept: application/json
 
-###
+### Warmwasser Extra an
 POST {{host}}:8080/warmwasserExtra/an
 Accept: application/json
 
-###
+### Warmwasser Extra aus
 POST {{host}}:8080/warmwasserExtra/aus
 Accept: application/json
 
-###
+### Warmwasser Extra Status
 GET {{host}}:8080/warmwasserExtra/status
 Accept: text/plain
 
-###
+### Offset Heizen Status
 GET {{host}}:8080/offsetHeizen/status
 Accept: text/plain
 
-###
+### Offset Heizen Reset
 POST {{host}}:8080/offsetHeizen/reset
 Accept: text/plain
