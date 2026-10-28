@@ -11,7 +11,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.config.tryGetString
 import io.ktor.websocket.close
 import io.ktor.websocket.closeExceptionally
 import io.ktor.websocket.send
@@ -24,11 +23,20 @@ private val TIMEOUT = 2.seconds
 
 @Single
 class WebsocketService(
-    config: ApplicationConfig,
-    private val host: String = config.tryGetString("service.websocket.host")!!,
-    private val port: String = config.tryGetString("service.websocket.port")!!,
-    private val pin: String = config.tryGetString("service.websocket.pin")!!
+    private val config: Config
 ) : Logging {
+
+    data class Config(
+        val host: String,
+        val port: Int,
+        val pin: String
+    ) {
+        constructor(config: ApplicationConfig) : this(
+            host = config.property("service.websocket.host").getString(),
+            port = config.property("service.websocket.port").getString().toInt(),
+            pin = config.property("service.websocket.pin").getString(),
+        )
+    }
 
     suspend fun retrieveData(
         block: suspend DefaultClientWebSocketSession.(result: MutableMap<String, Any>) -> Unit
@@ -40,19 +48,19 @@ class WebsocketService(
                     contentConverter = KotlinxWebsocketSerializationConverter(Json)
                 }
             }) {
-                logger.debug("Connecting to $host:$port...")
+                logger.debug("Connecting to ${config.host}:${config.port}...")
                 try {
                     webSocket(
                         method = HttpMethod.Get,
-                        host = host,
-                        port = port.toInt(),
+                        host = config.host,
+                        port = config.port,
                         path = "/",
                         request = {
                             header(HttpHeaders.SecWebSocketProtocol, "Lux_WS")
                         }
                     ) {
                         try {
-                            send("LOGIN;$pin").also { logger.debug("Sending login...") }
+                            send("LOGIN;${config.pin}").also { logger.debug("Sending login...") }
                             block(result).also { logger.debug("Running block.") }
                             close().also { logger.debug("Session closed.") }
                         } catch (e: Throwable) {
@@ -61,10 +69,10 @@ class WebsocketService(
                         }
                     }
                 } catch (e: Throwable) {
-                    logger.error("Catched exception while connected to $host:$port", e)
+                    logger.error("Catched exception while connected to ${config.host}:${config.port}", e)
                     throw e
                 } finally {
-                    close().also { logger.debug("Connection to $host:$port closed") }
+                    close().also { logger.debug("Connection to ${config.host}:${config.port} closed") }
                 }
             }
         }

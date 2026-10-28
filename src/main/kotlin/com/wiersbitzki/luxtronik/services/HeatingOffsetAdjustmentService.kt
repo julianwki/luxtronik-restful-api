@@ -13,7 +13,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.config.tryGetString
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 import java.math.BigDecimal
@@ -29,13 +28,23 @@ private const val OFFSET_HEIZEN_REGISTER = 10002
 
 @Single
 class HeatingOffsetAdjustmentService(
-    config: ApplicationConfig,
-    private val longitude: String = config.tryGetString("service.heatingOffsetAdjustment.longitude")!!,
-    private val latitude: String = config.tryGetString("service.heatingOffsetAdjustment.latitude")!!,
-    private val timezone: String = config.tryGetString("service.heatingOffsetAdjustment.timezone")!!,
-    private val active: Boolean = config.tryGetString("service.heatingOffsetAdjustment.active")!!.toBoolean(),
+    private val config: Config,
     private val singleRegisterModbusService: SingleRegisterModbusService
 ) : AdjustmentService {
+
+    data class Config(
+        val longitude: Double,
+        val latitude: Double,
+        val timezone: String,
+        val active: Boolean,
+    ) {
+        constructor(config: ApplicationConfig) : this(
+            longitude = config.property("service.heatingOffsetAdjustment.longitude").getString().toDouble(),
+            latitude = config.property("service.heatingOffsetAdjustment.latitude").getString().toDouble(),
+            timezone = config.property("service.heatingOffsetAdjustment.timezone").getString(),
+            active = config.property("service.heatingOffsetAdjustment.active").getString().toBoolean(),
+        )
+    }
 
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -69,7 +78,7 @@ class HeatingOffsetAdjustmentService(
             localTemperature.format(),
             offsetHeizenSoll.format()
         )
-        if (active.not()) {
+        if (config.active.not()) {
             logger.warn("Adjustment deactivated, not writing values!")
             return
         }
@@ -95,7 +104,7 @@ class HeatingOffsetAdjustmentService(
         .also { logger.info("$OFFSET_HEIZEN is {}K", it.format()) }
 
     override suspend fun reset() {
-        if (active.not()) {
+        if (config.active.not()) {
             logger.warn("Adjustment deactivated, not writing values!")
             return
         }
@@ -106,10 +115,10 @@ class HeatingOffsetAdjustmentService(
 
     private suspend fun forecastTemperature() =
         client.get {
-            parameter("latitude", latitude)
-            parameter("longitude", longitude)
+            parameter("latitude", config.latitude)
+            parameter("longitude", config.longitude)
             parameter("current", "temperature_2m")
-            parameter("timezone", timezone)
+            parameter("timezone", config.timezone)
         }.body<Forecast>()
             .also { logger.debug("Forecast: {}", Json.encodeToString(it)) }
             .current

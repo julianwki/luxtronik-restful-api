@@ -12,22 +12,30 @@ import com.ghgande.j2mod.modbus.procimg.SimpleRegister
 import com.wiersbitzki.luxtronik.OnOff
 import com.wiersbitzki.luxtronik.SwitchService
 import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.config.tryGetString
 import org.koin.core.annotation.Single
 import java.net.InetAddress
 
 @Single
 class SingleRegisterModbusService(
-    config: ApplicationConfig,
-    private val modbusHost: String = config.tryGetString("service.modbus.host")!!,
-    private val modbusPort: Int = config.tryGetString("service.modbus.port")!!.toInt(),
-    private val modbusSlave: Int = config.tryGetString("service.modbus.unitId")!!.toInt()
+    private val config: Config,
 ) : SwitchService {
 
+    data class Config(
+        val host: String,
+        val port: Int,
+        val unitId: Int
+    ) {
+        constructor(config: ApplicationConfig) : this(
+            host = config.property("service.modbus.host").getString(),
+            port = config.property("service.modbus.port").getString().toInt(),
+            unitId = config.property("service.modbus.unitId").getString().toInt(),
+        )
+    }
+
     private val connection =
-        TCPMasterConnection(InetAddress.getByName(modbusHost))
+        TCPMasterConnection(InetAddress.getByName(config.host))
             .apply {
-                this.port = modbusPort
+                this.port = config.port
                 this.timeout = 3000
             }
 
@@ -42,7 +50,7 @@ class SingleRegisterModbusService(
     @Synchronized
     override fun switch(function: String, register: Int, onOff: OnOff) {
         try {
-            logger.debug("Connecting to $modbusHost:$modbusPort...")
+            logger.debug("Connecting to ${config.host}:${config.port}...")
             connection.connect()
             ModbusTCPTransaction(connection).writeRegister(register, onOff)
         } catch (e: Exception) {
@@ -56,7 +64,7 @@ class SingleRegisterModbusService(
     @Synchronized
     override fun read(function: String, register: Int): Int {
         try {
-            logger.debug("Connecting to $modbusHost:$modbusPort...")
+            logger.debug("Connecting to ${config.host}:${config.port}...")
             connection.connect()
             return ModbusTCPTransaction(connection).readRegister(register)
                 .also { logger.debug("Read $function with register $register and value $it") }
@@ -71,7 +79,7 @@ class SingleRegisterModbusService(
     @Synchronized
     override fun readInput(function: String, register: Int): Int {
         try {
-            logger.debug("Connecting to $modbusHost:$modbusPort...")
+            logger.debug("Connecting to ${config.host}:${config.port}...")
             connection.connect()
             return ModbusTCPTransaction(connection).readInputRegister(register)
                 .also { logger.debug("Read $function with register $register and value $it") }
@@ -86,7 +94,7 @@ class SingleRegisterModbusService(
     @Synchronized
     override fun write(function: String, register: Int, value: Int) {
         try {
-            logger.debug("Connecting to $modbusHost:$modbusPort...")
+            logger.debug("Connecting to ${config.host}:${config.port}...")
             connection.connect()
             ModbusTCPTransaction(connection).writeRegister(register, value)
                 .also { logger.debug("Wrote $function with register $register and value $it") }
@@ -104,36 +112,36 @@ class SingleRegisterModbusService(
     private fun ModbusTCPTransaction.writeRegister(register: Int, value: Int) =
         WriteSingleRegisterRequest(register, SimpleRegister(value))
             .apply {
-                unitID = modbusSlave
+                unitID = config.unitId
             }.let {
                 request = it
                 execute()
                 response as WriteSingleRegisterResponse
             }.also {
-                logger.debug("Writing register $register of slave $modbusSlave with value ${value}...")
+                logger.debug("Writing register $register of slave ${config.unitId} with value ${value}...")
             }.registerValue
 
     private fun ModbusTCPTransaction.readRegister(register: Int) =
         ReadMultipleRegistersRequest(register, 1)
             .apply {
-                unitID = modbusSlave
+                unitID = config.unitId
             }.let {
                 request = it
                 execute()
                 response as ReadMultipleRegistersResponse
             }.also {
-                logger.debug("Reading register $register of slave $modbusSlave...")
+                logger.debug("Reading register $register of slave ${config.unitId}...")
             }.registers[0].value
 
     private fun ModbusTCPTransaction.readInputRegister(register: Int) =
         ReadInputRegistersRequest(register, 1)
             .apply {
-                unitID = modbusSlave
+                unitID = config.unitId
             }.let {
                 request = it
                 execute()
                 response as ReadInputRegistersResponse
             }.also {
-                logger.debug("Reading register $register of slave $modbusSlave...")
+                logger.debug("Reading register $register of slave ${config.unitId}...")
             }.registers[0].value
 }
