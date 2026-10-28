@@ -1,6 +1,7 @@
 package com.wiersbitzki.luxtronik.services
 
 import com.wiersbitzki.luxtronik.AdjustmentService
+import com.wiersbitzki.luxtronik.Current
 import com.wiersbitzki.luxtronik.Forecast
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -31,19 +32,35 @@ class HeatingOffsetAdjustmentService(
     private val config: Config,
     private val singleRegisterModbusService: SingleRegisterModbusService
 ) : AdjustmentService {
-
     data class Config(
         val longitude: Double,
         val latitude: Double,
         val timezone: String,
         val active: Boolean,
+        val temperature: Temperature,
     ) {
         constructor(config: ApplicationConfig) : this(
             longitude = config.property("service.heatingOffsetAdjustment.longitude").getString().toDouble(),
             latitude = config.property("service.heatingOffsetAdjustment.latitude").getString().toDouble(),
             timezone = config.property("service.heatingOffsetAdjustment.timezone").getString(),
             active = config.property("service.heatingOffsetAdjustment.active").getString().toBoolean(),
+            temperature = Temperature from config.property("service.heatingOffsetAdjustment.temperature").getString()
         )
+    }
+
+    enum class Temperature(val value: String) {
+        TEMPERATURE_2M("temperature_2m") {
+            override fun from(current: Current) = current.temperature2m.toBigDecimal()
+        },
+        APPARENT_TEMPERATURE("apparent_temperature") {
+            override fun from(current: Current) = current.apparentTemperature.toBigDecimal()
+        };
+
+        companion object {
+            infix fun from(value: String): Temperature = entries.first { it.value == value }
+        }
+
+        abstract fun from(current: Current): BigDecimal
     }
 
     private val client = HttpClient(CIO) {
@@ -58,6 +75,7 @@ class HeatingOffsetAdjustmentService(
             contentType(ContentType.Application.Json)
         }
     }
+
     private val aussentemperatur: BigDecimal
         get() = singleRegisterModbusService.readInput(AUSSENTEMPERATUR, AUSSENTEMPERATUR_REGISTER)
             .toBigDecimal()
@@ -117,16 +135,15 @@ class HeatingOffsetAdjustmentService(
         client.get {
             parameter("latitude", config.latitude)
             parameter("longitude", config.longitude)
-            parameter("current", "temperature_2m")
+            parameter("current", "temperature_2m,apparent_temperature")
             parameter("timezone", config.timezone)
         }.body<Forecast>()
             .also { logger.debug("Forecast: {}", Json.encodeToString(it)) }
-            .current
-            .temperature2m
-            .toBigDecimal()
+            .let { config.temperature.from(it.current) }
             .multiply(BigDecimal.TEN)
             .setScale(0, RoundingMode.HALF_UP)
 
     private fun Int.format() = "%03.1f".format(this / 10.0)
+
     private fun BigDecimal.format() = "%03.1f".format(this.toDouble() / 10.0)
 }

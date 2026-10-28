@@ -18,3 +18,4 @@ service:
     longitude: "$LOCATION_LON:10.4144"
     timezone: "$TZ:Europe/Berlin"
     active: "$HEATING_OFFSET_ADJUSTMENT:false"
+    temperature: "$HEATING_OFFSET_TEMPERATURE:apparent_temperature"

@@ -88,6 +88,8 @@ data class CurrentUnits(
     val interval: String,
     @SerialName("temperature_2m")
     val temperature2m: String,
+    @SerialName("apparent_temperature")
+    val apparentTemperature: String,
 )
 
 @Serializable
@@ -96,4 +98,6 @@ data class Current(
     val interval: Int,
     @SerialName("temperature_2m")
     val temperature2m: Double,
+    @SerialName("apparent_temperature")
+    val apparentTemperature: Double,
 )
