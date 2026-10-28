@@ -30,9 +30,10 @@ private const val OFFSET_HEIZEN_REGISTER = 10002
 @Single
 class HeatingOffsetAdjustmentService(
     config: ApplicationConfig,
-    private val longitude: String = config.tryGetString("heatingOffsetAdjustment.location.longitude")!!,
-    private val latitude: String = config.tryGetString("heatingOffsetAdjustment.location.latitude")!!,
-    private val timezone: String = config.tryGetString("heatingOffsetAdjustment.location.timezone")!!,
+    private val longitude: String = config.tryGetString("service.heatingOffsetAdjustment.longitude")!!,
+    private val latitude: String = config.tryGetString("service.heatingOffsetAdjustment.latitude")!!,
+    private val timezone: String = config.tryGetString("service.heatingOffsetAdjustment.timezone")!!,
+    private val active: Boolean = config.tryGetString("service.heatingOffsetAdjustment.active")!!.toBoolean(),
     private val singleRegisterModbusService: SingleRegisterModbusService
 ) : AdjustmentService {
 
@@ -62,11 +63,16 @@ class HeatingOffsetAdjustmentService(
             .setScale(-1, RoundingMode.DOWN)
             .divide(valueOf(2))
             .toInt()
-        logger.info("Forecast/Local {}°C/{}°C, calculated Offset is {}K",
+        logger.info(
+            "Forecast/Local {}°C/{}°C, calculated Offset is {}K",
             forecastTemperature.format(),
             localTemperature.format(),
             offsetHeizenSoll.format()
         )
+        if (active.not()) {
+            logger.warn("Adjustment deactivated, not writing values!")
+            return
+        }
         if (offsetHeizenSoll == 0) {
             reset()
             return
@@ -89,13 +95,17 @@ class HeatingOffsetAdjustmentService(
         .also { logger.info("$OFFSET_HEIZEN is {}K", it.format()) }
 
     override suspend fun reset() {
+        if (active.not()) {
+            logger.warn("Adjustment deactivated, not writing values!")
+            return
+        }
         singleRegisterModbusService.write(MODUS_HEIZEN, MODUS_HEIZEN_REGISTER, 0)
         singleRegisterModbusService.write(OFFSET_HEIZEN, OFFSET_HEIZEN_REGISTER, 0)
         logger.info("Reset $OFFSET_HEIZEN to 0K")
     }
 
     private suspend fun forecastTemperature() =
-        client.get() {
+        client.get {
             parameter("latitude", latitude)
             parameter("longitude", longitude)
             parameter("current", "temperature_2m")

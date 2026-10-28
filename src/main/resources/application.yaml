@@ -16,4 +16,5 @@ service:
   heatingOffsetAdjustment:
     latitude: "$LOCATION_LAT:53.2525"
     longitude: "$LOCATION_LON:10.4144"
-    timezone: "$LOCATION_TZ:Europe/Berlin"
+    timezone: "$TZ:Europe/Berlin"
+    active: "$HEATING_OFFSET_ADJUSTMENT:false"
