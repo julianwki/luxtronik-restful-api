@@ -19,9 +19,9 @@ import java.net.InetAddress
 @Single
 class SingleRegisterModbusService(
     config: ApplicationConfig,
-    private val modbusHost: String = config.tryGetString("ktor.service.modbus.host")!!,
-    private val modbusPort: Int = config.tryGetString("ktor.service.modbus.port")!!.toInt(),
-    private val modbusSlave: Int = config.tryGetString("ktor.service.modbus.unitId")!!.toInt()
+    private val modbusHost: String = config.tryGetString("service.modbus.host")!!,
+    private val modbusPort: Int = config.tryGetString("service.modbus.port")!!.toInt(),
+    private val modbusSlave: Int = config.tryGetString("service.modbus.unitId")!!.toInt()
 ) : SwitchService {
 
     private val connection =

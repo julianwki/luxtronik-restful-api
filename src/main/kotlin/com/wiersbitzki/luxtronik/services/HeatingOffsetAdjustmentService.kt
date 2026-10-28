@@ -30,9 +30,9 @@ private const val OFFSET_HEIZEN_REGISTER = 10002
 @Single
 class HeatingOffsetAdjustmentService(
     config: ApplicationConfig,
-    private val longitude: String = config.tryGetString("ktor.location.longitude")!!,
-    private val latitude: String = config.tryGetString("ktor.location.latitude")!!,
-    private val timezone: String = config.tryGetString("ktor.location.timezone")!!,
+    private val longitude: String = config.tryGetString("heatingOffsetAdjustment.location.longitude")!!,
+    private val latitude: String = config.tryGetString("heatingOffsetAdjustment.location.latitude")!!,
+    private val timezone: String = config.tryGetString("heatingOffsetAdjustment.location.timezone")!!,
     private val singleRegisterModbusService: SingleRegisterModbusService
 ) : AdjustmentService {
 

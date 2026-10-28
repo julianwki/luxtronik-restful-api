@@ -4,16 +4,16 @@ ktor:
       - com.wiersbitzki.luxtronik.ApplicationKt.module
   deployment:
     port: 8080
-  service:
-    websocket:
-      host: "$LUXTRONIK_HOST:127.0.0.1"
-      port: "$LUXTRONIK_PORT:8214"
-      pin: "$LUXTRONIK_PIN:999999"
-    modbus:
-      host: "$LUXTRONIK_HOST:127.0.0.1"
-      port: "$LUXTRONIK_PORT:502"
-      unitId: 1
-  location:
+service:
+  websocket:
+    host: "$LUXTRONIK_HOST:127.0.0.1"
+    port: "$LUXTRONIK_PORT:8214"
+    pin: "$LUXTRONIK_PIN:999999"
+  modbus:
+    host: "$LUXTRONIK_HOST:127.0.0.1"
+    port: "$LUXTRONIK_PORT:502"
+    unitId: 1
+  heatingOffsetAdjustment:
     latitude: "$LOCATION_LAT:53.2525"
     longitude: "$LOCATION_LON:10.4144"
     timezone: "$LOCATION_TZ:Europe/Berlin"

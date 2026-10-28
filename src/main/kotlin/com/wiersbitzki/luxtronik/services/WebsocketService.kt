@@ -25,9 +25,9 @@ private val TIMEOUT = 2.seconds
 @Single
 class WebsocketService(
     config: ApplicationConfig,
-    private val host: String = config.tryGetString("ktor.service.websocket.host")!!,
-    private val port: String = config.tryGetString("ktor.service.websocket.port")!!,
-    private val pin: String = config.tryGetString("ktor.service.websocket.pin")!!
+    private val host: String = config.tryGetString("service.websocket.host")!!,
+    private val port: String = config.tryGetString("service.websocket.port")!!,
+    private val pin: String = config.tryGetString("service.websocket.pin")!!
 ) : Logging {
 
     suspend fun retrieveData(
