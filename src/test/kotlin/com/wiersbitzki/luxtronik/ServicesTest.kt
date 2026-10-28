@@ -1,10 +1,14 @@
 package com.wiersbitzki.luxtronik
 
+import com.wiersbitzki.luxtronik.DataService.Content
+import com.wiersbitzki.luxtronik.DataService.ContentItem
+import com.wiersbitzki.luxtronik.DataService.Navigation
+import com.wiersbitzki.luxtronik.DataService.NavigationItem
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 
-class ModelTest : ShouldSpec({
+class ServicesTest : ShouldSpec({
     context("navigation") {
         val navigation = Navigation(
             id = "navId",

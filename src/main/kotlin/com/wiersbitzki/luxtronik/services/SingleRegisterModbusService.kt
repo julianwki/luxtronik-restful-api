@@ -9,8 +9,8 @@ import com.ghgande.j2mod.modbus.msg.WriteSingleRegisterRequest
 import com.ghgande.j2mod.modbus.msg.WriteSingleRegisterResponse
 import com.ghgande.j2mod.modbus.net.TCPMasterConnection
 import com.ghgande.j2mod.modbus.procimg.SimpleRegister
-import com.wiersbitzki.luxtronik.OnOff
 import com.wiersbitzki.luxtronik.SwitchService
+import com.wiersbitzki.luxtronik.SwitchService.OnOff
 import io.ktor.server.config.ApplicationConfig
 import org.koin.core.annotation.Single
 import java.net.InetAddress

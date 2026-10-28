@@ -1,8 +1,6 @@
 package com.wiersbitzki.luxtronik.services
 
 import com.wiersbitzki.luxtronik.AdjustmentService
-import com.wiersbitzki.luxtronik.Current
-import com.wiersbitzki.luxtronik.Forecast
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -14,6 +12,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.config.ApplicationConfig
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 import java.math.BigDecimal
@@ -146,4 +146,41 @@ class HeatingOffsetAdjustmentService(
     private fun Int.format() = "%03.1f".format(this / 10.0)
 
     private fun BigDecimal.format() = "%03.1f".format(this.toDouble() / 10.0)
+
+    @Serializable
+    data class Forecast(
+        val latitude: Double,
+        val longitude: Double,
+        @SerialName("generationtime_ms")
+        val generationtimeMs: Double,
+        @SerialName("utc_offset_seconds")
+        val utcOffsetSeconds: Int,
+        val timezone: String,
+        @SerialName("timezone_abbreviation")
+        val timezoneAbbreviation: String,
+        val elevation: Double,
+        @SerialName("current_units")
+        val currentUnits: CurrentUnits,
+        val current: Current,
+    )
+
+    @Serializable
+    data class CurrentUnits(
+        val time: String,
+        val interval: String,
+        @SerialName("temperature_2m")
+        val temperature2m: String,
+        @SerialName("apparent_temperature")
+        val apparentTemperature: String,
+    )
+
+    @Serializable
+    data class Current(
+        val time: String,
+        val interval: Int,
+        @SerialName("temperature_2m")
+        val temperature2m: Double,
+        @SerialName("apparent_temperature")
+        val apparentTemperature: Double,
+    )
 }
