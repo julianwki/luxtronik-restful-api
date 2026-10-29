@@ -4,6 +4,7 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.websocket.send
 import kotlinx.serialization.Serializable
+import java.math.BigDecimal
 import java.math.RoundingMode
 
 interface DataService : Logging {
@@ -128,6 +129,6 @@ interface SwitchService : Logging {
 
 interface AdjustmentService : Logging {
     suspend fun adjust()
-    suspend fun status(): Int
+    suspend fun status(): BigDecimal
     suspend fun reset()
 }
