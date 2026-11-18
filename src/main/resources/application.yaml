@@ -7,11 +7,11 @@ ktor:
 service:
   websocket:
     host: "$LUXTRONIK_HOST:127.0.0.1"
-    port: "$LUXTRONIK_PORT:8214"
+    port: "$LUXTRONIK_WS_PORT:8214"
     pin: "$LUXTRONIK_PIN:999999"
   modbus:
     host: "$LUXTRONIK_HOST:127.0.0.1"
-    port: "$LUXTRONIK_PORT:502"
+    port: "$LUXTRONIK_MODBUS_PORT:502"
     unitId: 1
   heatingOffsetAdjustment:
     latitude: "$LOCATION_LAT:53.2525"
