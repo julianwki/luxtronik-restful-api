@@ -74,7 +74,8 @@ in state `HEIZEN` everything is attributed to heating, in `WW` to hot water, oth
 
 1. Fetch the current temperature for the configured location from [Open-Meteo](https://open-meteo.com).
 2. Read the outside temperature measured by the heat pump (Modbus input register `10108`).
-3. Calculate the offset as `local − forecast`, rounded down to 0.5 K steps.
+3. Calculate the offset as `local − forecast`, truncated toward zero to 0.5 K steps (e.g. `1.3` → `1.0`,
+   `−1.3` → `−1.0`).
 4. If the offset is `0`, reset heating mode and offset. Otherwise, set heating mode to *offset* (register `10000` =
    `2`) and write the offset to register `10002` if it changed.
 
