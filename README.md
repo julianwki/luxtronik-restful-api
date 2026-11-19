@@ -145,6 +145,12 @@ If the server starts successfully, you'll see the following output:
 - [Product Requirements Document](docs/PRD.md) – goals, requirements and known limitations
 - [Architecture Decision Records](docs/adr/README.md) – why the service is built the way it is
 
+## License
+
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). You may use, change and
+share it for any noncommercial purpose, such as running it for your own heat pump, hobby projects or use by
+non-profit organizations. Commercial use is not permitted. For a commercial license, please contact the author.
+
 ## Tech stack
 
 - [Ktor](https://ktor.io) (Netty server, CIO client, WebSockets, kotlinx.serialization)
