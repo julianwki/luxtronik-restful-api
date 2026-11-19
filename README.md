@@ -140,6 +140,11 @@ If the server starts successfully, you'll see the following output:
 2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
 ```
 
+## Documentation
+
+- [Product Requirements Document](docs/PRD.md) – goals, requirements and known limitations
+- [Architecture Decision Records](docs/adr/README.md) – why the service is built the way it is
+
 ## Tech stack
 
 - [Ktor](https://ktor.io) (Netty server, CIO client, WebSockets, kotlinx.serialization)
