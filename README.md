@@ -151,6 +151,12 @@ This project is licensed under the [PolyForm Noncommercial License 1.0.0](LICENS
 share it for any noncommercial purpose, such as running it for your own heat pump, hobby projects or use by
 non-profit organizations. Commercial use is not permitted. For a commercial license, please contact the author.
 
+## Funding
+
+If this project is useful to you, you can support its development on Ko-fi:
+
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/julianwki)
+
 ## Tech stack
 
 - [Ktor](https://ktor.io) (Netty server, CIO client, WebSockets, kotlinx.serialization)
